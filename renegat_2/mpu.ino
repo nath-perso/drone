@@ -1,4 +1,4 @@
-#include <mpu.h>
+#include "mpu.h"
 
 Adafruit_MPU6050 mpu;
 
@@ -20,7 +20,7 @@ bool mpu_setup() {
   mpu.setGyroRange(MPU6050_GYRO_RANGE);
   mpu.setFilterBandwidth(MPU6050_BAND);
 
-  Serial.println("MPU6050 ready to go")
+  Serial.println("MPU6050 ready to go");
   return true;
 }
 

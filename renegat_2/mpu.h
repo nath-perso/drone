@@ -14,4 +14,9 @@
 /* ----- VARIABLES ----- */
 sensors_event_t accel, gyro, temp;
 
+/* ----- FUNCTIONS ----- */
+bool mpu_setup();
+void mpu_get_data();
+void mpu_display_data();
+
 #endif /* __MPU_H__ */
