@@ -7,14 +7,19 @@
  * ===                         DEFINE                           ===
  * ================================================================ */
 #define INTERRUPT_PIN 2
-#define LED_PIN       13
-#define BLINK_DELAY   200   /* (ms) */    
+#define LED_PIN 13
+#define BLINK_DELAY 200 /* (ms) */
 
 /* ================================================================
  * ===                        VARIABLES                         ===
  * ================================================================ */
+/* Blink variables */
 bool blinkState = false;
 uint32_t blinkLastTime = 0;
+
+/* Frequency and time measuring */
+uint32_t lastMainLoopTime = 0;
+float mainLoopFrequency = 0;
 
 
 /* ================================================================
@@ -48,6 +53,11 @@ void loop() {
     blink();
     blinkLastTime = millis();
   }
+
+  /* Frequency measure */
+  // mainLoopFrequency = 1/((micros() - lastMainLoopTime)*1e-6);
+  // Serial.println(mainLoopFrequency);
+  // lastMainLoopTime = micros();
 }
 
 

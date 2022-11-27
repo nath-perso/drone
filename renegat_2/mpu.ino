@@ -62,14 +62,27 @@ bool mpuSetup() {
   }
   Serial.println("MPU6050 connection successful");
 
-  /* Set offsets */
-  Serial.println("Setting MPU offsets...");
-  mpuSetOffsets();
-  mpu.PrintActiveOffsets();
+  /* Set full scale ranges */
+  mpu.setFullScaleAccelRange(MPU6050_ACCEL_RANGE);
+  mpu.setFullScaleGyroRange(MPU6050_GYRO_RANGE);
 
   /* Initialize DMP */
   Serial.println("Initializing DMP...");
   devStatus = mpu.dmpInitialize();
+
+  /* Set offsets */
+#ifdef MPU_CALIBRATION
+  Serial.println("Calibration requested for MPU offsets. Place the device still on a flat surface. Press any key when ready...");
+  while (Serial.available() && Serial.read()); /* empty buffer */
+  while (!Serial.available());                 /* wait for data */
+  while (Serial.available() && Serial.read()); /* empty buffer again */
+  Serial.println("Calibrating MPU offsets...");
+  mpuCalibrate();
+#else
+  Serial.println("Setting MPU offsets...");
+  mpuSetOffsets();
+  mpu.PrintActiveOffsets();
+#endif
 
   /* Verify it worked */
   if (devStatus == 0) {
@@ -99,11 +112,19 @@ bool mpuSetup() {
     return false;
   }
 
-  mpu.setFullScaleAccelRange(MPU6050_ACCEL_RANGE);
-  mpu.setFullScaleGyroRange(MPU6050_GYRO_RANGE);
-
   Serial.println("MPU6050 ready to go");
   return true;
+}
+
+
+/*
+ * @brief   Calibrate and set offsets
+ */
+void mpuCalibrate() {
+  mpu.CalibrateAccel(6);
+  mpu.CalibrateGyro(6);
+  Serial.print("\t");
+  mpu.PrintActiveOffsets();
 }
 
 
@@ -133,7 +154,7 @@ void dmpDataReady() {
  * @returns 0 if successful
  */
 void mpuGetData() {
-  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { /* Get the latest packet from DMP */
+  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { /* Get the latest packet from DMP. Takes approx. 3 ms */
 
     /* Get DMP data */
     mpu.dmpGetQuaternion(&quat, fifoBuffer); /* Note : getting quaternions is required to compute other data */
