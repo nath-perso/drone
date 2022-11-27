@@ -28,8 +28,8 @@
 #define Z_GYRO_OFFSET   55
 
 /* Scale ranges */
-#define MPU6050_ACCEL_RANGE   MPU6050_ACCEL_FS_4    /* Accelerometer full-scale range : +/- 2, 4, 8 or 16g */
-#define MPU6050_GYRO_RANGE    MPU6050_GYRO_FS_500   /* Accelerometer full-scale range : +/- 250, 500, 1000 or 2000 deg/s */
+#define MPU6050_ACCEL_RANGE   MPU6050_ACCEL_FS_2    /* Accelerometer full-scale range : +/- 2, 4, 8 or 16g */
+#define MPU6050_GYRO_RANGE    MPU6050_GYRO_FS_250   /* Accelerometer full-scale range : +/- 250, 500, 1000 or 2000 deg/s */
 
 /* Computations */
 // #define COMPUTE_EULER                 /* Takes approx. 0.7 ms to compute */
@@ -39,10 +39,10 @@
 
 /* Display */
 // #define MPU_DISPLAY_QUATERNIONS
-#define MPU_DISPLAY_ACCEL
-#define MPU_DISPLAY_GYRO
+// #define MPU_DISPLAY_ACCEL
+// #define MPU_DISPLAY_GYRO
 // #define MPU_DISPLAY_EULER
-// #define MPU_DISPLAY_YAWPITCHROLL
+#define MPU_DISPLAY_YAWPITCHROLL
 // #define MPU_DISPLAY_ACCEL_LOCAL
 // #define MPU_DISPLAY_ACCEL_WORLD
 
