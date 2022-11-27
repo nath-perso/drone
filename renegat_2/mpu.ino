@@ -66,16 +66,21 @@ bool mpuSetup() {
   mpu.setFullScaleAccelRange(MPU6050_ACCEL_RANGE);
   mpu.setFullScaleGyroRange(MPU6050_GYRO_RANGE);
 
+#ifdef MPU_USE_DMP
   /* Initialize DMP */
   Serial.println("Initializing DMP...");
   devStatus = mpu.dmpInitialize();
+#endif
 
   /* Set offsets */
 #ifdef MPU_CALIBRATION
   Serial.println("Calibration requested for MPU offsets. Place the device still on a flat surface. Press any key when ready...");
-  while (Serial.available() && Serial.read()); /* empty buffer */
-  while (!Serial.available());                 /* wait for data */
-  while (Serial.available() && Serial.read()); /* empty buffer again */
+  while (Serial.available() && Serial.read())
+    ; /* empty buffer */
+  while (!Serial.available())
+    ; /* wait for data */
+  while (Serial.available() && Serial.read())
+    ; /* empty buffer again */
   Serial.println("Calibrating MPU offsets...");
   mpuCalibrate();
 #else
@@ -84,6 +89,7 @@ bool mpuSetup() {
   mpu.PrintActiveOffsets();
 #endif
 
+#ifdef MPU_USE_DMP
   /* Verify it worked */
   if (devStatus == 0) {
     /* Turn on the DMP */
@@ -111,6 +117,7 @@ bool mpuSetup() {
     Serial.println(")");
     return false;
   }
+#endif
 
   Serial.println("MPU6050 ready to go");
   return true;
@@ -154,6 +161,7 @@ void dmpDataReady() {
  * @returns 0 if successful
  */
 void mpuGetData() {
+#ifdef MPU_USE_DMP
   if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { /* Get the latest packet from DMP. Takes approx. 3 ms */
 
     /* Get DMP data */
@@ -178,9 +186,10 @@ void mpuGetData() {
 #endif
   } else {
     Serial.println("Failed to get current FIFO Packet from MPU DMP");
-    return 1;
   }
-  return 0;
+#else
+  mpu.getMotion6(&accel.x, &accel.y, &accel.z, &gyro.x, &gyro.y, &gyro.z);
+#endif
 }
 
 

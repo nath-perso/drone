@@ -55,9 +55,9 @@ void loop() {
   }
 
   /* Frequency measure */
-  // mainLoopFrequency = 1/((micros() - lastMainLoopTime)*1e-6);
-  // Serial.println(mainLoopFrequency);
-  // lastMainLoopTime = micros();
+  mainLoopFrequency = 1/((micros() - lastMainLoopTime)*1e-6);
+  Serial.println(mainLoopFrequency);
+  lastMainLoopTime = micros();
 }
 
 
