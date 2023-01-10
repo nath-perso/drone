@@ -14,7 +14,7 @@ void setup(){
 
  //CHANGES for v1.6 HERE!!! **************PAY ATTENTION*************
   
- error = ps2x.config_gamepad(12,10,9,11, true, false);   //setup pins and settings:  GamePad(clock, command, attention, data, Pressures?, Rumble?) check for error
+ error = ps2x.config_gamepad(12,11,10,9, true, false);   //setup pins and settings:  GamePad(clock, command, attention, data, Pressures?, Rumble?) check for error
  
  if(error == 0){
    Serial.println("Found Controller, configured successful");
