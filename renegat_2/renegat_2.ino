@@ -2,12 +2,19 @@
  * ===                        INCLUDES                          ===
  * ================================================================ */
 #include "mpu.h"
+#include "PS2_controller.h"
 
 /* ================================================================
  * ===                         DEFINE                           ===
  * ================================================================ */
+ /* Pins */
 #define INTERRUPT_PIN 2
-#define LED_PIN 13
+#define LED_PIN       13
+#define PS2_DATA_PIN      9 
+#define PS2_ATTENTION_PIN 10
+#define PS2_COMMAND_PIN   11
+#define PS2_CLK_PIN       12
+
 #define BLINK_DELAY 200 /* (ms) */
 
 /* ================================================================
@@ -39,9 +46,19 @@ void setup(void) {
     Serial.println("Failed to setup MPU. Exiting program ...");
     return;
   };
+
+  /* Setup PS2 controller */
+  if (!ps2ControllerSetup()) {
+    Serial.println("Failed to setup PS2 controller. Exiting program ...");
+    return;
+  };
 }
 
 void loop() {
+  /* Get controller data */
+  handlePS2Controller();
+
+  /* Get MPU data */
   mpuGetData();
 
   /* Print the measures */
