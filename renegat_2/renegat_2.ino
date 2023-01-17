@@ -4,6 +4,8 @@
 #include "mpu.h"
 #include "PS2_controller.h"
 
+#include <Servo.h>
+
 /* ================================================================
  * ===                         DEFINE                           ===
  * ================================================================ */
@@ -28,6 +30,10 @@ uint32_t blinkLastTime = 0;
 uint32_t lastMainLoopTime = 0;
 float mainLoopFrequency = 0;
 
+/* ESC control */
+Servo esc;
+int consigne = 0;
+
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
@@ -48,10 +54,17 @@ void setup(void) {
   };
 
   /* Setup PS2 controller */
-  if (!ps2ControllerSetup()) {
+  if (ps2ControllerSetup()) {
     Serial.println("Failed to setup PS2 controller. Exiting program ...");
     return;
   };
+
+  /* ESC setup */
+  if (esc.attach(5)) {
+    Serial.println("Failed to attach PIN 5 to ESC. Exiting program ...");
+    return;
+  };
+  
 }
 
 void loop() {
@@ -62,7 +75,7 @@ void loop() {
   mpuGetData();
 
   /* Print the measures */
-  mpuDisplayData();
+  // mpuDisplayData();
   delay(10);
 
   /* Blink */
@@ -75,6 +88,16 @@ void loop() {
   // mainLoopFrequency = 1/((micros() - lastMainLoopTime)*1e-6);
   // Serial.println(mainLoopFrequency);
   // lastMainLoopTime = micros();
+
+  esc.writeMicroseconds(consigne);
+
+  // consigne = ps2x.Analog(PSS_LY) - 128;
+  if (Serial.available()) {
+    int value = Serial.parseInt();
+    if (value)
+      consigne = value;
+  }
+  Serial.println(consigne);
 }
 
 
