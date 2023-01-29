@@ -101,7 +101,6 @@ bool mpuSetup() {
   /* Initialize DMP */
   Serial.println("Initializing DMP...");
   devStatus = mpu.dmpInitialize();
-  delayMicroseconds(1000);  /* Delay used to let time for MPU to respond to setup */
 #endif
 
   /* Set offsets */
