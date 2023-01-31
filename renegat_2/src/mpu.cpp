@@ -10,26 +10,25 @@
    external interrupt #0 pin. On the Arduino Nano, this is digital I/O pin 2.
    ========================================================================= */
 
-
 /* ================================================================
  * ===                        VARIABLES                         ===
  * ================================================================ */
 
 /* Class default I2C address is 0x68 (AD0 low)
  * AD0 high = 0x69
- * To change I2C adress, pass it as parameter : 
+ * To change I2C adress, pass it as parameter :
  * MPU6050 mpu(0x69)
-*/
+ */
 MPU6050 mpu;
 
 /* MPU control/status vars */
-bool dmpReady = false;               /* set true if DMP init was successful */
-uint8_t mpuIntStatus;                /* holds actual interrupt status byte from MPU */
-uint8_t devStatus;                   /* return status after each device operation (0 = success, !0 = error) */
-uint16_t packetSize;                 /* expected DMP packet size (default is 42 bytes) */
-uint16_t fifoCount;                  /* count of all bytes currently in FIFO */
-uint8_t fifoBuffer[64];              /* FIFO storage buffer */
-volatile bool mpuInterrupt = false;  // indicates whether MPU interrupt pin has gone high
+bool dmpReady = false;              /* set true if DMP init was successful */
+uint8_t mpuIntStatus;               /* holds actual interrupt status byte from MPU */
+uint8_t devStatus;                  /* return status after each device operation (0 = success, !0 = error) */
+uint16_t packetSize;                /* expected DMP packet size (default is 42 bytes) */
+uint16_t fifoCount;                 /* count of all bytes currently in FIFO */
+uint8_t fifoBuffer[64];             /* FIFO storage buffer */
+volatile bool mpuInterrupt = false; // indicates whether MPU interrupt pin has gone high
 
 /* Orientation/motion vars */
 Quaternion quat;        /* [w, x, y, z]         quaternion container                          */
@@ -41,15 +40,15 @@ VectorFloat gravity;    /* [x, y, z]            gravity vector                  
 float euler[3];         /* [psi, theta, phi]    Euler angle container                         */
 float ypr[3];           /* [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector   */
 
-
 /* ================================================================
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
 
 /*
- * @brief   Set acceleration and gyroscopic offsets 
+ * @brief   Set acceleration and gyroscopic offsets
  */
-void mpuSetOffsets() {
+void mpuSetOffsets()
+{
   mpu.setXAccelOffset(X_ACCEL_OFFSET);
   mpu.setYAccelOffset(Y_ACCEL_OFFSET);
   mpu.setZAccelOffset(Z_ACCEL_OFFSET);
@@ -58,20 +57,20 @@ void mpuSetOffsets() {
   mpu.setZGyroOffset(Z_GYRO_OFFSET);
 }
 
-
 /*
- * @brief   Indicates that MPU interrupt pin has gone high  
+ * @brief   Indicates that MPU interrupt pin has gone high
  */
-void dmpDataReady() {
+void dmpDataReady()
+{
   mpuInterrupt = true;
 }
-
 
 /*
  * @brief   Set up the MPU6050 chip
  * @returns   True if chip identified and initialized
  */
-bool mpuSetup() {
+bool mpuSetup()
+{
   Serial.println("Initializing MPU6050...");
 
   /* Join I2C bus (I2Cdev library doesn't do this automatically) */
@@ -87,7 +86,8 @@ bool mpuSetup() {
   pinMode(INTERRUPT_PIN, INPUT);
 
   /* Verify connection */
-  if (!mpu.testConnection()) { /* ERR MNGT - MPU connection failed */
+  if (!mpu.testConnection())
+  { /* ERR MNGT - MPU connection failed */
     Serial.println("MPU6050 connection failed");
     return false;
   }
@@ -123,7 +123,8 @@ bool mpuSetup() {
 
 #ifdef MPU_USE_DMP
   /* Verify it worked */
-  if (devStatus == 0) {
+  if (devStatus == 0)
+  {
     /* Turn on the DMP */
     Serial.println("Enabling DMP...");
     mpu.setDMPEnabled(true);
@@ -139,7 +140,9 @@ bool mpuSetup() {
 
     /* Get expected DMP packet size for later comparison */
     packetSize = mpu.dmpGetFIFOPacketSize();
-  } else {
+  }
+  else
+  {
     /* ERR MNGT - MPU DMP initialization failed
      * 1 = initial memory load failed
      * 2 = DMP configuration updates failed
@@ -155,25 +158,71 @@ bool mpuSetup() {
   return true;
 }
 
-
 /*
  * @brief   Calibrate and set offsets
  */
-void mpuCalibrate() {
+void mpuCalibrate()
+{
   mpu.CalibrateAccel(6);
   mpu.CalibrateGyro(6);
   Serial.print("\t");
   mpu.PrintActiveOffsets();
 }
 
+/*
+ * @brief   Compute Pitch and Roll using complementary filter
+ */
+void mpuComputeRollPitchComplementaryFilter(VectorInt16 accel_data, VectorInt16 gyro_data, float *out_data)
+{
+  static unsigned long old_time = 0;
+  static float pitch = 0;
+  static float roll = 0;
+
+  float dt = (micros() - old_time) * 1e-6;
+  old_time = micros();
+
+  float cutoff_frequency = 0.2; /* Complementary filter cutoff frequency (Hz) */
+  float K = 1; //(1 / (2 * PI * cutoff_frequency)) / (1 / (2 * PI * cutoff_frequency) + dt);
+
+  // Serial.println(dt, 4);
+  // Serial.println(K, 4);
+  // Serial.println(gyro.x);
+  // Serial.println(gyro_data.x * dt * PI / 180);
+
+  /* Convert acceleration data from counts to m/s²*/
+  float accel_data_x_ms2 = accel_data.x / MPU_ACCEL_SCALE_FACTOR * GRAVITY;
+  float accel_data_y_ms2 = accel_data.y / MPU_ACCEL_SCALE_FACTOR * GRAVITY;
+  float accel_data_z_ms2 = accel_data.z / MPU_ACCEL_SCALE_FACTOR * GRAVITY;
+
+  float accel_pitch = atan2(-accel_data_x_ms2, sqrt(accel_data_y_ms2 * accel_data_y_ms2 + accel_data_z_ms2 * accel_data_z_ms2));
+  float accel_roll = atan2(accel_data_y_ms2, accel_data_z_ms2);
+
+  float gyro_pitch = pitch + gyro_data.x * dt * PI / 180;
+  float gyro_roll =  roll + gyro_data.y * dt * PI / 180;
+
+  Serial.print(accel_pitch); Serial.print('\t');
+  Serial.print(gyro_pitch);
+  Serial.print('\t');
+  Serial.print(accel_roll); Serial.print('\t');
+  Serial.println(gyro_roll);
+
+  pitch = K * gyro_pitch + (1 - K) * accel_pitch;
+  roll  = K * gyro_roll +  (1 - K) * accel_roll;
+
+  out_data[0] = 0;
+  out_data[1] = pitch;
+  out_data[2] = roll;
+}
 
 /*
- * @brief   Get quaternion values [w x y z]  
+ * @brief   Get MPU data
  * @returns 0 if successful
  */
-void mpuGetData() {
+void mpuGetData()
+{
 #ifdef MPU_USE_DMP
-  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { /* Get the latest packet from DMP. Takes approx. 3 ms */
+  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer))
+  { /* Get the latest packet from DMP. Takes approx. 3 ms */
 
     /* Get DMP data */
     mpu.dmpGetQuaternion(&quat, fifoBuffer); /* Note : getting quaternions is required to compute other data */
@@ -195,19 +244,24 @@ void mpuGetData() {
     mpu.dmpGetLinearAccelInWorld(&accelWorld, &accelLocal, &quat);
 #endif
 #endif
-  } else {
+  }
+  else
+  {
     Serial.println("Failed to get current FIFO Packet from MPU DMP");
   }
 #else
   mpu.getMotion6(&accel.x, &accel.y, &accel.z, &gyro.x, &gyro.y, &gyro.z);
+#ifdef COMPUTE_YAWPITCHROLL
+  mpuComputeRollPitchComplementaryFilter(accel, gyro, ypr);
+#endif
 #endif
 }
-
 
 /*
  * @brief   Display MPU data depending on defined configuration
  */
-void mpuDisplayData() {
+void mpuDisplayData()
+{
 #ifdef MPU_DISPLAY_QUATERNIONS
   Serial.print("Quaternions\t");
   Serial.print(quat.w);

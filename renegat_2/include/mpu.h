@@ -46,6 +46,9 @@
 // #define MPU_DISPLAY_ACCEL_LOCAL
 // #define MPU_DISPLAY_ACCEL_WORLD
 
+/* Rescale */
+#define MPU_ACCEL_SCALE_FACTOR      16384.f
+#define GRAVITY      9.81
 
 
 /* ================================================================
@@ -59,5 +62,6 @@
 bool mpuSetup();
 void mpuGetData();
 void mpuDisplayData();
+void mpuComputeRollPitchComplementaryFilter(VectorInt16* *accel_data, VectorInt16* *gyro_data, float *out_data);
 
 #endif /* __MPU_H__ */

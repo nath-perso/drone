@@ -57,11 +57,11 @@ void setup(void) {
   };
 
   /* Setup PS2 controller */
-  if (ps2ControllerSetup()) {
-    Serial.println("Failed to setup PS2 controller. Exiting setup ...");
-    setup_error = 1;
-    return;
-  };
+  // if (ps2ControllerSetup()) {
+  //   Serial.println("Failed to setup PS2 controller. Exiting setup ...");
+  //   setup_error = 1;
+  //   return;
+  // };
 
 //  /* ESC setup */
 //  if (esc.attach(5)) {
@@ -79,7 +79,7 @@ void loop() {
   }
   
   /* Get controller data */
-  handlePS2Controller();
+  // handlePS2Controller();
 
   /* Get MPU data */
   mpuGetData();
