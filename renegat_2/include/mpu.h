@@ -16,6 +16,8 @@
 /* ================================================================
  * ===                         DEFINE                           ===
  * ================================================================ */
+#define RAD2DEG     180/PI
+#define DEG2RAD     PI/180
 // #define MPU_USE_DMP
 
 /* Offsets */
@@ -30,6 +32,7 @@
 /* Scale ranges */
 #define MPU6050_ACCEL_RANGE   MPU6050_ACCEL_FS_2    /* Accelerometer full-scale range : +/- 2, 4, 8 or 16g */
 #define MPU6050_GYRO_RANGE    MPU6050_GYRO_FS_250   /* Accelerometer full-scale range : +/- 250, 500, 1000 or 2000 deg/s */
+#define MPU6050_HALF_RANGE_COUNTS   32767         /* Number of counts from 0 to maximum range value */
 
 /* Computations */
 // #define COMPUTE_EULER                 /* Takes approx. 0.7 ms to compute */
@@ -46,10 +49,6 @@
 // #define MPU_DISPLAY_ACCEL_LOCAL
 // #define MPU_DISPLAY_ACCEL_WORLD
 
-/* Rescale */
-#define MPU_ACCEL_SCALE_FACTOR      16384.f
-#define GRAVITY      9.81
-
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -62,6 +61,5 @@
 bool mpuSetup();
 void mpuGetData();
 void mpuDisplayData();
-void mpuComputeRollPitchComplementaryFilter(VectorInt16* *accel_data, VectorInt16* *gyro_data, float *out_data);
 
 #endif /* __MPU_H__ */

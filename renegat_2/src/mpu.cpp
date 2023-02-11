@@ -170,48 +170,125 @@ void mpuCalibrate()
 }
 
 /*
- * @brief   Compute Pitch and Roll using complementary filter
+ * @brief   Get MPU accelerometer range value
+ * @returns Accelerometer range (g)
  */
-void mpuComputeRollPitchComplementaryFilter(VectorInt16 accel_data, VectorInt16 gyro_data, float *out_data)
+float mpuGetAccelRange()
+{
+  switch (mpu.getFullScaleAccelRange())
+  {
+  case 0x00:
+    return 2;
+    break;
+  case 0x01:
+    return 4;
+    break;
+  case 0x02:
+    return 8;
+    break;
+  case 0x03:
+    return 16;
+    break;
+
+  default:
+    return 2;
+    break;
+  }
+}
+
+/*
+ * @brief   Get MPU gyrometer range value
+ * @returns Gyrometer range (g)
+ */
+float mpuGetGyroRange()
+{
+  switch (mpu.getFullScaleGyroRange())
+  {
+  case 0x00:
+    return 250;
+    break;
+  case 0x01:
+    return 500;
+    break;
+  case 0x02:
+    return 1000;
+    break;
+  case 0x03:
+    return 2000;
+    break;
+
+  default:
+    return 250;
+    break;
+  }
+}
+
+/*
+ * @brief   Compute Roll Pitch and Yaw using complementary filter
+ * @returns [yaw, pitch, roll]
+ */
+void mpuComputeRollPitchYawComplementaryFilter(VectorInt16 accel_data, VectorInt16 gyro_data, float *out_data)
 {
   static unsigned long old_time = 0;
-  static float pitch = 0;
-  static float roll = 0;
+  static float pitch_cf = 0;
+  static float roll_cf = 0;
+  static float yaw = 0;
+
+  static float gyro_roll_stored = 0;
+  static float gyro_pitch_stored = 0;
 
   float dt = (micros() - old_time) * 1e-6;
   old_time = micros();
 
-  float cutoff_frequency = 0.2; /* Complementary filter cutoff frequency (Hz) */
-  float K = 1; //(1 / (2 * PI * cutoff_frequency)) / (1 / (2 * PI * cutoff_frequency) + dt);
+  float cutoff_frequency = 0.5; /* Complementary filter cutoff frequency (Hz). The lower the cutoff, the more we trust the gyro. */
+  float K = (1 / (2 * PI * cutoff_frequency)) / (1 / (2 * PI * cutoff_frequency) + dt);
 
-  // Serial.println(dt, 4);
-  // Serial.println(K, 4);
-  // Serial.println(gyro.x);
-  // Serial.println(gyro_data.x * dt * PI / 180);
+  /* Convert acceleration data to floats */
+  float f_accel_data_x = accel_data.x;
+  float f_accel_data_y = accel_data.y;
+  float f_accel_data_z = accel_data.z;
 
-  /* Convert acceleration data from counts to m/s²*/
-  float accel_data_x_ms2 = accel_data.x / MPU_ACCEL_SCALE_FACTOR * GRAVITY;
-  float accel_data_y_ms2 = accel_data.y / MPU_ACCEL_SCALE_FACTOR * GRAVITY;
-  float accel_data_z_ms2 = accel_data.z / MPU_ACCEL_SCALE_FACTOR * GRAVITY;
+  /* Compute accelerometer estimations for the complementary filter */
+  float accel_roll = atan2(f_accel_data_y, f_accel_data_z);
+  float accel_pitch = atan2(-f_accel_data_x, sqrt(f_accel_data_y * f_accel_data_y + f_accel_data_z * f_accel_data_z));
 
-  float accel_pitch = atan2(-accel_data_x_ms2, sqrt(accel_data_y_ms2 * accel_data_y_ms2 + accel_data_z_ms2 * accel_data_z_ms2));
-  float accel_roll = atan2(accel_data_y_ms2, accel_data_z_ms2);
+  /* Compute conversion factor */
+  int gyro_range = mpuGetGyroRange();
+  float cnts_to_radps = DEG2RAD * gyro_range / MPU6050_HALF_RANGE_COUNTS;
 
-  float gyro_pitch = pitch + gyro_data.x * dt * PI / 180;
-  float gyro_roll =  roll + gyro_data.y * dt * PI / 180;
+  /* Compute gyro estimations for the complementary filter  */
+  float gyro_roll_cf = roll_cf + gyro_data.x * dt * cnts_to_radps;
+  float gyro_pitch_cf = pitch_cf + gyro_data.y * dt * cnts_to_radps;
 
-  Serial.print(accel_pitch); Serial.print('\t');
-  Serial.print(gyro_pitch);
-  Serial.print('\t');
-  Serial.print(accel_roll); Serial.print('\t');
-  Serial.println(gyro_roll);
+  /* Compute gyro standalone estimations (for comparison) */
+  float gyro_roll = gyro_roll_stored + gyro_data.x * dt * cnts_to_radps;
+  float gyro_pitch = gyro_pitch_stored + gyro_data.y * dt * cnts_to_radps;
 
-  pitch = K * gyro_pitch + (1 - K) * accel_pitch;
-  roll  = K * gyro_roll +  (1 - K) * accel_roll;
+  gyro_roll_stored = gyro_roll;
+  gyro_pitch_stored = gyro_pitch;
 
-  out_data[0] = 0;
-  out_data[1] = pitch;
-  out_data[2] = roll;
+  pitch_cf = K * gyro_pitch_cf + (1 - K) * accel_pitch;
+  roll_cf = K * gyro_roll_cf + (1 - K) * accel_roll;
+
+  /* Compute yaw angle (gyro based -> it will drift) */
+  float gyro_yaw = yaw + gyro_data.z * dt * cnts_to_radps;
+  yaw = gyro_yaw;
+
+  /* DEBUG DISPLAY */
+  // Serial.println(K, 4);              Serial.print('\t');
+  // Serial.print(accel_roll * RAD2DEG);Serial.print('\t');
+  // Serial.print(gyro_roll * RAD2DEG); Serial.print('\t');
+  // Serial.print(roll_cf * RAD2DEG);   Serial.print('\t');
+  // Serial.print(accel_pitch*RAD2DEG); Serial.print('\t');
+  // Serial.print(gyro_pitch*RAD2DEG);  Serial.print('\t');
+  // Serial.print(pitch_cf*RAD2DEG);    Serial.print('\t');
+  // Serial.print(yaw*RAD2DEG);         Serial.print('\t');
+  // Serial.print('\n');
+
+  /* Ouptut data */
+  out_data[0] = yaw;
+  out_data[1] = pitch_cf;
+  out_data[2] = roll_cf;
 }
 
 /*
@@ -252,7 +329,7 @@ void mpuGetData()
 #else
   mpu.getMotion6(&accel.x, &accel.y, &accel.z, &gyro.x, &gyro.y, &gyro.z);
 #ifdef COMPUTE_YAWPITCHROLL
-  mpuComputeRollPitchComplementaryFilter(accel, gyro, ypr);
+  mpuComputeRollPitchYawComplementaryFilter(accel, gyro, ypr);
 #endif
 #endif
 }

@@ -85,7 +85,7 @@ void loop() {
   mpuGetData();
 
   /* Print the measures */
-  // mpuDisplayData();
+  mpuDisplayData();
   delay(10);
 
   /* Blink */
