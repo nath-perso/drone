@@ -5,7 +5,7 @@
  * ===                         DEFINE                           ===
  * ================================================================ */
  /* Pins */
-#define LED_PIN       13
+#define LED_PIN       6
 #define PS2_DATA_PIN      2 
 #define PS2_ATTENTION_PIN 3
 #define PS2_COMMAND_PIN   4

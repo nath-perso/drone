@@ -39,7 +39,7 @@ enum PS2_controller_type_code_list : byte {
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
 
-/*
+/**
  * @brief   Setup PS2 controller and check connection
  * @returns 0 if successful, error code if not
  */
@@ -103,14 +103,14 @@ int ps2ControllerSetup()
   return (int)error;
 }
 
-/*
+/**
  * @brief   Read new controller data and handle useful information
- * @help    Button(button_address) :  returns true as long as the button is being held
-            Analog(button_address) :  returns pressure reading on button (byte)
-            NewButtonState() :        returns true if any button changes state (ON -> OFF / OFF -> ON)
-            NewButtonState(button_address) :  returns true if specified button changes state (ON -> OFF / OFF -> ON)
-            ButtonPressed(button_address) :   returns true (once) when specified button has been pressed
-            ButtonReleased(button_address) :  returns true (once) when specified button has been released
+ * @note    Button(button_address) :  returns true as long as the button is being held
+ * @note    Analog(button_address) :  returns pressure reading on button (byte)
+ * @note    NewButtonState() :        returns true if any button changes state (ON -> OFF / OFF -> ON)
+ * @note    NewButtonState(button_address) :  returns true if specified button changes state (ON -> OFF / OFF -> ON)
+ * @note    ButtonPressed(button_address) :   returns true (once) when specified button has been pressed
+ * @note    ButtonReleased(button_address) :  returns true (once) when specified button has been released
  */
 void handlePS2Controller()
 {
@@ -177,4 +177,16 @@ void handlePS2Controller()
     Serial.print(",");
     Serial.println(ps2x.Analog(PSS_RX), DEC);
   }
+}
+
+
+/**
+ * @brief   Check if the specified button is pressed
+ * @returns True if pressed
+ */
+bool ps2IsButtonPressed(uint16_t button)
+{
+  /* Read from controller to get buttons information */
+  ps2x.read_gamepad();
+  return ps2x.Button(button);
 }

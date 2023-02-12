@@ -22,5 +22,6 @@
  * ================================================================ */
 int ps2ControllerSetup();
 void handlePS2Controller();
+bool ps2IsButtonPressed(uint16_t button);
 
 #endif /* __PS2_CONTROLLER_H__ */

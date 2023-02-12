@@ -6,7 +6,7 @@
  * ================================================================ */
  /* Pins */
 #define INTERRUPT_PIN 2
-#define LED_PIN       13
+#define LED_PIN       6
 #define PS2_DATA_PIN      9 
 #define PS2_ATTENTION_PIN 10
 #define PS2_COMMAND_PIN   11

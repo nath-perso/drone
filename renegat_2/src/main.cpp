@@ -11,6 +11,19 @@
 
 #define BLINK_DELAY 200 /* (ms) */
 
+/* RADIO */
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+#define RF_CE_PIN_RECEIVER 7
+#define RF_CSN_PIN_RECEIVER 8
+
+// Define the address for each board
+const uint64_t address[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
+
+// Initialize the radio module
+RF24 radio(RF_CE_PIN_RECEIVER, RF_CSN_PIN_RECEIVER);
+
 /* ================================================================
  * ===                        VARIABLES                         ===
  * ================================================================ */
@@ -57,11 +70,11 @@ void setup(void) {
   };
 
   /* Setup PS2 controller */
-  if (ps2ControllerSetup()) {
-    Serial.println("Failed to setup PS2 controller. Exiting setup ...");
-    setup_error = 1;
-    return;
-  };
+  // if (ps2ControllerSetup()) {
+  //   Serial.println("Failed to setup PS2 controller. Exiting setup ...");
+  //   setup_error = 1;
+  //   return;
+  // };
 
 //  /* ESC setup */
 //  if (esc.attach(5)) {
@@ -69,6 +82,17 @@ void setup(void) {
     // setup_error = 1;
 //    return;
 //  };
+
+  /* RADIO */
+  radio.begin();
+  Serial.println("Setting up the radio communication ...");
+  radio.setAutoAck(false);
+  radio.setDataRate(RF24_1MBPS);
+  radio.setPALevel(RF24_PA_MIN);
+  radio.setChannel(100);
+  radio.openWritingPipe(address[1]);
+  radio.openReadingPipe(1, address[0]);
+  radio.startListening();
 }
 
 void loop() {
@@ -79,7 +103,7 @@ void loop() {
   }
   
   /* Get controller data */
-  handlePS2Controller();
+  // handlePS2Controller();
 
   /* Get MPU data */
   mpuGetData();
@@ -109,6 +133,19 @@ void loop() {
 //      consigne = value;
 //  }
 //  Serial.println(consigne);
+
+
+// Receiver board code
+  if (radio.available()) {
+    char received[32];
+    radio.read(received, 32);
+    Serial.println("Received: " + String(received));
+    Serial.println(received);
+    if (String(received) == "1")
+      digitalWrite(5, HIGH);
+    else if (String(received) == "0")
+      digitalWrite(5, LOW);
+  }
 }
 
 
