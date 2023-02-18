@@ -13,7 +13,6 @@
 /* ================================================================
  * ===                        VARIABLES                         ===
  * ================================================================ */
-PS2X ps2x; /* create PS2 Controller Class */
 
 
 
@@ -68,6 +67,8 @@ uint8_t ps2ControllerSetup(){
     default:
       Serial.println("Controller connection error. Code not defined.");
   }
+
+  return error;
 }
 
 
