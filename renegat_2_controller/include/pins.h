@@ -5,14 +5,17 @@
  * ===                         DEFINE                           ===
  * ================================================================ */
  /* LED pins */
-#define LED_PIN         6
-#define RADIO_LED_PIN   5
+#define LED_PIN       6
 
- /* MPU pins */
-#define INTERRUPT_PIN 2
+/* PS2 Controller pins */
+#define PS2_DATA_PIN      2 
+#define PS2_ATTENTION_PIN 3
+#define PS2_COMMAND_PIN   4
+#define PS2_CLK_PIN       5
 
 /* Radio pins */
-#define RF_CE_PIN_RECEIVER 7
-#define RF_CSN_PIN_RECEIVER 8
+#define RF_CE_PIN_SENDER  7
+#define RF_CSN_PIN_SENDER 8
+
 
 #endif /* __PINS_H__ */

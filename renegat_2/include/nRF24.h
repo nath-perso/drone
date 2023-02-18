@@ -1,15 +1,20 @@
-#ifndef __PS2_CONTROLLER_H__
-#define __PS2_CONTROLLER_H__
+#ifndef __NRF24_H__
+#define __NRF24_H__
 
 /* ================================================================
  * ===                        INCLUDES                          ===
  * ================================================================ */
-#include <PS2X_lib.h>
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
 
 
 /* ================================================================
  * ===                         DEFINE                           ===
  * ================================================================ */
+#define RF_CHANNEL  100
+#define PIPE_NUMBER 1
+#define IS_CONTROLLER   false
 
 
 /* ================================================================
@@ -20,7 +25,7 @@
 /* ================================================================
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
-int ps2ControllerSetup();
-void handlePS2Controller();
+bool radioSetup();
+void handleRadioReception();
 
-#endif /* __PS2_CONTROLLER_H__ */
+#endif /* __NRF24_H__ */

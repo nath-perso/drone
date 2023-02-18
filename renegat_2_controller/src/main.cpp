@@ -1,15 +1,10 @@
 /* ================================================================
  * ===                        INCLUDES                          ===
  * ================================================================ */
-/* System */
 #include <Arduino.h>
-#include "pins.h"
-
-/* Drivers */
-#include "mpu.h"
+#include "PS2_controller.h"
 #include "nRF24.h"
-
-#include "Servo.h"
+#include "pins.h"
 
 #define BLINK_DELAY 200 /* (ms) */
 
@@ -27,18 +22,21 @@ uint32_t blinkLastTime = 0;
 uint32_t lastMainLoopTime = 0;
 float mainLoopFrequency = 0;
 
-/* ESC control */
-Servo esc;
-int consigne = 0;
+/* PS2 */
+keys keyValues;
+
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
 
-void blink();
+void blink() {
+  blinkState = !blinkState;
+  digitalWrite(LED_PIN, blinkState);
+}
 
-void setup(void)
-{
+
+void setup(void) {
   /* Pins setup */
   pinMode(LED_PIN, OUTPUT);
 
@@ -47,75 +45,46 @@ void setup(void)
   while (!Serial)
     delay(10);
 
-  /* MPU setup */
-  if (!mpuSetup())
-  {
-    Serial.println("Failed to setup MPU. Exiting setup ...");
+  /* PS2 controller setup */
+  if (ps2ControllerSetup()) {
+    Serial.println("Failed to setup PS2 controller. Exiting setup ...");
     setup_error = 1;
     return;
   };
 
   /* Radio setup */
-  if (!radioSetup())
-  {
+  if (!radioSetup()) {
     Serial.println("Failed to setup radio. Exiting setup ...");
     setup_error = 1;
     return;
   };
 
-  //  /* ESC setup */
-  //  if (esc.attach(5)) {
-  //    Serial.println("Failed to attach PIN 5 to ESC. Exiting setup ...");
-  // setup_error = 1;
-  //    return;
-  //  };
-
-  Serial.println("End of setup function. Beginning superloop...");
+  Serial.println("End of setup. Beginning superloop...");
 }
 
-void loop()
-{
+void loop() {
   if (setup_error)
   {
     /* Failed to setup the system. Do nothing. */
     return;
   }
-
-  /* Receive radio data */
-  handleRadioReception();
-
-  /* Get MPU data */
-  mpuGetData();
-
-  /* Print the measures */
-  // mpuDisplayData();
-  delay(10);
+  
+  /* Get controller data */
+  handlePS2Controller(&keyValues);
 
   /* Blink */
-  if (millis() - blinkLastTime > BLINK_DELAY)
-  {
+  if (millis() - blinkLastTime > BLINK_DELAY) {
     blink();
     blinkLastTime = millis();
   }
+
+  /* Transmit data through radio */
+  radioTransmit(keyValues);
 
   /* Frequency measure */
   // mainLoopFrequency = 1/((micros() - lastMainLoopTime)*1e-6);
   // Serial.println(mainLoopFrequency);
   // lastMainLoopTime = micros();
-
-  //  esc.writeMicroseconds(consigne);
-  //
-  //  // consigne = ps2x.Analog(PSS_LY) - 128;
-  //  if (Serial.available()) {
-  //    int value = Serial.parseInt();
-  //    if (value)
-  //      consigne = value;
-  //  }
-  //  Serial.println(consigne);
 }
 
-void blink()
-{
-  blinkState = !blinkState;
-  digitalWrite(LED_PIN, blinkState);
-}
+

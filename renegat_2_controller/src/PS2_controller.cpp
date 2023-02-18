@@ -38,8 +38,9 @@ enum PS2_controller_type_code_list : byte {
 /* ================================================================
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
+int toggleButton(unsigned int mask, keys *keys);
 
-/*
+/**
  * @brief   Setup PS2 controller and check connection
  * @returns 0 if successful, error code if not
  */
@@ -103,78 +104,72 @@ int ps2ControllerSetup()
   return (int)error;
 }
 
-/*
+/**
  * @brief   Read new controller data and handle useful information
- * @help    Button(button_address) :  returns true as long as the button is being held
-            Analog(button_address) :  returns pressure reading on button (byte)
-            NewButtonState() :        returns true if any button changes state (ON -> OFF / OFF -> ON)
-            NewButtonState(button_address) :  returns true if specified button changes state (ON -> OFF / OFF -> ON)
-            ButtonPressed(button_address) :   returns true (once) when specified button has been pressed
-            ButtonReleased(button_address) :  returns true (once) when specified button has been released
+ * @note    Button(button_address) :  returns true as long as the button is being held
+ * @note    Analog(button_address) :  returns pressure reading on button (byte)
+ * @note    NewButtonState() :        returns true if any button changes state (ON -> OFF / OFF -> ON)
+ * @note    NewButtonState(button_address) :  returns true if specified button changes state (ON -> OFF / OFF -> ON)
+ * @note    ButtonPressed(button_address) :   returns true (once) when specified button has been pressed
+ * @note    ButtonReleased(button_address) :  returns true (once) when specified button has been released
  */
-void handlePS2Controller()
+void handlePS2Controller(keys *keys)
 {
   /* Read from controller to get buttons information */
   ps2x.read_gamepad();
 
-  if (ps2x.Button(PSB_START))
-    Serial.println("Start is being held");
-  if (ps2x.Button(PSB_SELECT))
-    Serial.println("Select is being held");
+	/* Analog readings */
+	keys->analogKeys.leftX = ps2x.Analog(PSS_LX);	/* Left analog stick */
+	keys->analogKeys.leftY = ps2x.Analog(PSS_LY);
+	keys->analogKeys.rghtX = ps2x.Analog(PSS_RX);	/* Right analog stick */
+	keys->analogKeys.rghtY = ps2x.Analog(PSS_RY);
 
-  if (ps2x.Button(PSB_PAD_UP))
-  {
-    Serial.print("Up held this hard: ");
-    Serial.println(ps2x.Analog(PSAB_PAD_UP), DEC);
-  }
-  if (ps2x.Button(PSB_PAD_RIGHT))
-  {
-    Serial.print("Right held this hard: ");
-    Serial.println(ps2x.Analog(PSAB_PAD_RIGHT), DEC);
-  }
-  if (ps2x.Button(PSB_PAD_LEFT))
-  {
-    Serial.print("LEFT held this hard: ");
-    Serial.println(ps2x.Analog(PSAB_PAD_LEFT), DEC);
-  }
-  if (ps2x.Button(PSB_PAD_DOWN))
-  {
-    Serial.print("DOWN held this hard: ");
-    Serial.println(ps2x.Analog(PSAB_PAD_DOWN), DEC);
-  }
+	/* Digital readings */
+	if (ps2x.NewButtonState()) {
+		/* Use masking to toggle the value */
+		if (ps2x.ButtonPressed(PSB_L1))			keys->digitalKeys.bits.l1 = toggleButton(0x0001, keys);
+		if (ps2x.ButtonPressed(PSB_L2))			keys->digitalKeys.bits.l2 = toggleButton(0x0002, keys);
+		if (ps2x.ButtonPressed(PSB_L3))			keys->digitalKeys.bits.l3 = toggleButton(0x0004, keys);
 
-  if (ps2x.NewButtonState())
-  {
-    if (ps2x.Button(PSB_L3))
-      Serial.println("L3 pressed");
-    if (ps2x.Button(PSB_R3))
-      Serial.println("R3 pressed");
-    if (ps2x.Button(PSB_L2))
-      Serial.println("L2 pressed");
-    if (ps2x.Button(PSB_R2))
-      Serial.println("R2 pressed");
-    if (ps2x.Button(PSB_GREEN))
-      Serial.println("Triangle pressed");
-  }
+		if (ps2x.ButtonPressed(PSB_R1))			keys->digitalKeys.bits.r1 = toggleButton(0x0008, keys);
+		if (ps2x.ButtonPressed(PSB_R2))			keys->digitalKeys.bits.r2 = toggleButton(0x0010, keys);
+		if (ps2x.ButtonPressed(PSB_R3))			keys->digitalKeys.bits.r3 = toggleButton(0x0020, keys);
 
-  if (ps2x.ButtonPressed(PSB_RED))
-    Serial.println("Circle just pressed");
+    /* Left pad */
+		if (ps2x.ButtonPressed(PSB_PAD_UP))		keys->digitalKeys.bits.up       = toggleButton(0x0040, keys);
+		if (ps2x.ButtonPressed(PSB_PAD_DOWN))	keys->digitalKeys.bits.down     = toggleButton(0x0080, keys);
+		if (ps2x.ButtonPressed(PSB_PAD_LEFT))	keys->digitalKeys.bits.left     = toggleButton(0x0100, keys);
+		if (ps2x.ButtonPressed(PSB_PAD_RIGHT))	keys->digitalKeys.bits.right  = toggleButton(0x0200, keys);
 
-  if (ps2x.ButtonReleased(PSB_PINK))
-    Serial.println("Square just released");
+    /* Right buttons */
+		if (ps2x.ButtonPressed(PSB_TRIANGLE))	keys->digitalKeys.bits.triangle = toggleButton(0x0400, keys);
+		if (ps2x.ButtonPressed(PSB_CROSS))		keys->digitalKeys.bits.cross    = toggleButton(0x0800, keys);
+		if (ps2x.ButtonPressed(PSB_SQUARE))		keys->digitalKeys.bits.square   = toggleButton(0x1000, keys);
+		if (ps2x.ButtonPressed(PSB_CIRCLE))		keys->digitalKeys.bits.circle   = toggleButton(0x2000, keys);
 
-  if (ps2x.NewButtonState(PSB_BLUE))
-    Serial.println("X just changed");
+    /* Middle buttons */
+		if (ps2x.ButtonPressed(PSB_SELECT))		keys->digitalKeys.bits.select   = toggleButton(0x4000, keys);
+		if (ps2x.ButtonPressed(PSB_START))		keys->digitalKeys.bits.start    = toggleButton(0x8000, keys);
+	}
+}
 
-  if (ps2x.Button(PSB_L1) || ps2x.Button(PSB_R1))
-  {
-    Serial.print("Stick Values:");
-    Serial.print(ps2x.Analog(PSS_LY), DEC);
-    Serial.print(",");
-    Serial.print(ps2x.Analog(PSS_LX), DEC);
-    Serial.print(",");
-    Serial.print(ps2x.Analog(PSS_RY), DEC);
-    Serial.print(",");
-    Serial.println(ps2x.Analog(PSS_RX), DEC);
-  }
+int toggleButton(unsigned int mask, keys *keys) {
+	if ((keys->digitalKeys.onoff & mask) == 0) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
+
+/**
+ * @brief   Check if the specified button is pressed
+ * @returns True if pressed
+ */
+bool ps2IsButtonPressed(uint16_t button)
+{
+  /* Read from controller to get buttons information */
+  ps2x.read_gamepad();
+  return ps2x.Button(button);
 }
