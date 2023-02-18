@@ -5,7 +5,8 @@
  * ===                         DEFINE                           ===
  * ================================================================ */
  /* LED pins */
-#define LED_PIN       6
+#define LED_PIN         6
+#define RADIO_LED_PIN   5
 
  /* MPU pins */
 #define INTERRUPT_PIN 2

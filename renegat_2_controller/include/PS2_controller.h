@@ -15,16 +15,16 @@
 /* ================================================================
  * ===                        VARIABLES                         ===
  * ================================================================ */
-//analogs
-typedef struct analogs {
+/* Analogs */
+struct analogs {
 	unsigned int leftX;
 	unsigned int leftY;
 	unsigned int rghtX;
 	unsigned int rghtY;
 };
 
-//digitals
-typedef union digitals{
+/* Digitals */
+union digitals{
 	struct {
 		unsigned int l1 : 1;
 		unsigned int l2 : 1;
@@ -32,20 +32,21 @@ typedef union digitals{
 		unsigned int r1 : 1;
 		unsigned int r2 : 1;
 		unsigned int r3 : 1;
-		unsigned int up : 1;
-		unsigned int dn : 1;
-		unsigned int lf : 1;
-		unsigned int rt : 1;
-		unsigned int tr : 1;
-		unsigned int cr : 1;
-		unsigned int sq : 1;
-		unsigned int cl : 1;
-		unsigned int sl : 1;
-		unsigned int st : 1;
+		unsigned int up 	: 1;
+		unsigned int down 	: 1;
+		unsigned int left 	: 1;
+		unsigned int right 	: 1;
+		unsigned int triangle : 1;
+		unsigned int cross 	: 1;
+		unsigned int square : 1;
+		unsigned int circle : 1;
+		unsigned int select : 1;
+		unsigned int start 	: 1;
 	}bits;
 	unsigned int onoff;
 } ;
 
+/* Key structure */
 struct keys {
 	analogs analogKeys;
 	digitals digitalKeys;

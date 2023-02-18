@@ -11,7 +11,7 @@
 const uint64_t address[2] = {0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL};
 
 /* Initialize the radio module */
-RF24 radio(RF_CE_PIN_RECEIVER, RF_CSN_PIN_RECEIVER);
+RF24 radio(RF_CE_PIN_SENDER, RF_CSN_PIN_SENDER);
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
@@ -37,25 +37,20 @@ bool radioSetup()
 }
 
 /**
- * @brief       Handle radio data reception
+ * @brief       Transmit data through radio
+ * @return      True if success
  */
-void handleRadioReception()
+bool radioTransmit(keys keys)
 {
-    if (radio.available())
-    {
-        byte received[32];
-        radio.read(received, 32);
-        Serial.print("Received : \t");
-        for (int i = 0; i < 16; i++)
-        {
-            Serial.print(received[i]);
-            Serial.print("\t");
-        }
-        Serial.println();
+    radio.stopListening();
 
-        if (received[9] & 0x08)
-            digitalWrite(RADIO_LED_PIN, HIGH);
-        else
-            digitalWrite(RADIO_LED_PIN, LOW);
+    if (!radio.write(&keys, sizeof(keys)))
+    {
+        Serial.println("TX failed !");
+        radio.startListening();
+        return false;
     }
+    radio.startListening();
+    
+    return true;
 }
