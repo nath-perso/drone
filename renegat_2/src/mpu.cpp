@@ -44,7 +44,7 @@ float ypr[3];           /* [yaw, pitch, roll]   yaw/pitch/roll container and gra
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
 
-/*
+/**
  * @brief   Set acceleration and gyroscopic offsets
  */
 void mpuSetOffsets()
@@ -57,7 +57,7 @@ void mpuSetOffsets()
   mpu.setZGyroOffset(Z_GYRO_OFFSET);
 }
 
-/*
+/**
  * @brief   Indicates that MPU interrupt pin has gone high
  */
 void dmpDataReady()
@@ -65,7 +65,7 @@ void dmpDataReady()
   mpuInterrupt = true;
 }
 
-/*
+/**
  * @brief   Set up the MPU6050 chip
  * @returns   True if chip identified and initialized
  */
@@ -158,7 +158,7 @@ bool mpuSetup()
   return true;
 }
 
-/*
+/**
  * @brief   Calibrate and set offsets
  */
 void mpuCalibrate()
@@ -169,7 +169,7 @@ void mpuCalibrate()
   mpu.PrintActiveOffsets();
 }
 
-/*
+/**
  * @brief   Get MPU accelerometer range value
  * @returns Accelerometer range (g)
  */
@@ -196,7 +196,7 @@ float mpuGetAccelRange()
   }
 }
 
-/*
+/**
  * @brief   Get MPU gyrometer range value
  * @returns Gyrometer range (g)
  */
@@ -223,7 +223,7 @@ float mpuGetGyroRange()
   }
 }
 
-/*
+/**
  * @brief   Compute Roll Pitch and Yaw using complementary filter
  * @returns [yaw, pitch, roll]
  */
@@ -291,7 +291,7 @@ void mpuComputeRollPitchYawComplementaryFilter(VectorInt16 accel_data, VectorInt
   out_data[2] = roll_cf;
 }
 
-/*
+/**
  * @brief   Get MPU data
  * @returns 0 if successful
  */
@@ -334,7 +334,7 @@ void mpuGetData()
 #endif
 }
 
-/*
+/**
  * @brief   Display MPU data depending on defined configuration
  */
 void mpuDisplayData()
