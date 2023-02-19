@@ -29,7 +29,7 @@ float mainLoopFrequency = 0;
 
 /* ESC control */
 Servo esc;
-int consigne = 0;
+int consigne = 1000;
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
@@ -63,12 +63,13 @@ void setup(void)
     return;
   };
 
-  //  /* ESC setup */
-  //  if (esc.attach(5)) {
-  //    Serial.println("Failed to attach PIN 5 to ESC. Exiting setup ...");
-  // setup_error = 1;
-  //    return;
-  //  };
+  /* ESC setup */
+  if (esc.attach(3, 1000, 2000))
+  {
+    Serial.println("Failed to attach PIN 3 to ESC. Exiting setup ...");
+    setup_error = 1;
+    return;
+  };
 
   Serial.println("End of setup function. Beginning superloop...");
 }
@@ -103,15 +104,15 @@ void loop()
   // Serial.println(mainLoopFrequency);
   // lastMainLoopTime = micros();
 
-  //  esc.writeMicroseconds(consigne);
-  //
-  //  // consigne = ps2x.Analog(PSS_LY) - 128;
-  //  if (Serial.available()) {
-  //    int value = Serial.parseInt();
-  //    if (value)
-  //      consigne = value;
-  //  }
-  //  Serial.println(consigne);
+   esc.writeMicroseconds(consigne);
+  
+   // consigne = ps2x.Analog(PSS_LY) - 128;
+   if (Serial.available()) {
+     int value = Serial.parseInt();
+     if (value)
+       consigne = value;
+   }
+   Serial.println(consigne);
 }
 
 void blink()
