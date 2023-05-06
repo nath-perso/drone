@@ -3,6 +3,14 @@
  * ================================================================ */
 #include "nRF24.h"
 #include "pins.h"
+#include "ESC.h"
+
+/* ================================================================
+ * ===                         DEFINE                           ===
+ * ================================================================ */
+#define RF_CHANNEL  100
+#define PIPE_NUMBER 1
+#define IS_CONTROLLER   false
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -53,9 +61,47 @@ void handleRadioReception()
         }
         Serial.println();
 
-        if (received[9] & 0x08)
+        /* ACTION : Turn on/off a LED and an ESC */
+        if (received[9] & 0x08) {
             digitalWrite(RADIO_LED_PIN, HIGH);
-        else
+            escRun(ESC1, 30);
+        }
+        else {
             digitalWrite(RADIO_LED_PIN, LOW);
+            escRun(ESC1, 0);
+        }
+        if (received[9] & 0x04)
+            escRun(ESC2, 10);
+        else
+            escRun(ESC2, 0);
+        if (received[9] & 0x16)
+            escRun(ESC3, 50);
+        else
+            escRun(ESC3, 0);
+        if (received[9] & 0x32)
+            escRun(ESC4, 30);
+        else
+            escRun(ESC4, 0);
+
+        int consigne0 = (received[0] - 128)/255.0*1000;
+        if (consigne0 > 0)
+            escRun(ESC1, consigne0);
+        else if (consigne0 < 0)
+                escRun(ESC2, -consigne0);
+            else {
+                escRun(ESC1, 0);
+                escRun(ESC2, 0);
+            }
+
+        int consigne2 = (received[2] - 128)/255.0*1000;
+        if (consigne2 > 0)
+            escRun(ESC3, consigne2);
+        else if (consigne2 < 0)
+                escRun(ESC4, -consigne2);
+            else {
+                escRun(ESC3, 0);
+                escRun(ESC4, 0);
+            }
+        
     }
 }

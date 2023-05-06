@@ -8,8 +8,7 @@
 /* Drivers */
 #include "mpu.h"
 #include "nRF24.h"
-
-#include "Servo.h"
+#include "ESC.h"
 
 #define BLINK_DELAY 200 /* (ms) */
 
@@ -26,10 +25,6 @@ uint32_t blinkLastTime = 0;
 /* Frequency and time measuring */
 uint32_t lastMainLoopTime = 0;
 float mainLoopFrequency = 0;
-
-/* ESC control */
-Servo esc;
-int consigne = 1000;
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
@@ -64,14 +59,14 @@ void setup(void)
   };
 
   /* ESC setup */
-  if (esc.attach(3, 1000, 2000))
+  if (!escSetup())
   {
-    Serial.println("Failed to attach PIN 3 to ESC. Exiting setup ...");
+    Serial.println("Failed to setup ESCs. Exiting setup ...");
     setup_error = 1;
     return;
   };
 
-  Serial.println("End of setup function. Beginning superloop...");
+  Serial.println("Setup successful. Beginning superloop...");
 }
 
 void loop()
@@ -104,15 +99,14 @@ void loop()
   // Serial.println(mainLoopFrequency);
   // lastMainLoopTime = micros();
 
-   esc.writeMicroseconds(consigne);
   
    // consigne = ps2x.Analog(PSS_LY) - 128;
-   if (Serial.available()) {
-     int value = Serial.parseInt();
-     if (value)
-       consigne = value;
-   }
-   Serial.println(consigne);
+  //  if (Serial.available()) {
+  //    int value = Serial.parseInt();
+  //    if (value)
+  //      consigne = value;
+  //  }
+  //  Serial.println(consigne);
 }
 
 void blink()

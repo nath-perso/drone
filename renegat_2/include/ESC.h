@@ -1,24 +1,18 @@
-#ifndef __MPU_H__
-#define __MPU_H__
+#ifndef __ESC_H__
+#define __ESC_H__
 
 /* ================================================================
  * ===                        INCLUDES                          ===
  * ================================================================ */
-#include "I2Cdev.h"
-#include "MPU6050_6Axis_MotionApps612.h"
-
-/* Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
- * is used in I2Cdev.h */
-#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-#include "Wire.h"
-#endif
+#include "Servo.h"
 
 /* ================================================================
  * ===                         DEFINE                           ===
  * ================================================================ */
-#define RAD2DEG     180/PI
-#define DEG2RAD     PI/180
-
+#define ESC1            1
+#define ESC2            2
+#define ESC3            3
+#define ESC4            4
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -28,8 +22,7 @@
 /* ================================================================
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
-bool mpuSetup();
-void mpuGetData();
-void mpuDisplayData();
+bool escSetup();
+void escRun(int esc_num, int speed);
 
-#endif /* __MPU_H__ */
+#endif /* __ESC_H__ */
