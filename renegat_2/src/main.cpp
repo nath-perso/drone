@@ -9,6 +9,7 @@
 #include "mpu.h"
 #include "nRF24.h"
 #include "ESC.h"
+#include "flight_controller.h"
 
 #define BLINK_DELAY 200 /* (ms) */
 
@@ -25,6 +26,9 @@ uint32_t blinkLastTime = 0;
 /* Frequency and time measuring */
 uint32_t lastMainLoopTime = 0;
 float mainLoopFrequency = 0;
+
+/* Radio */
+extern byte keyValues[RADIO_FRAME_SIZE];
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
@@ -78,7 +82,10 @@ void loop()
   }
 
   /* Receive radio data */
-  handleRadioReception();
+  radioReceiveData(keyValues);
+
+  /* Display data received through radio */
+  radioDisplayData(keyValues);
 
   /* Get MPU data */
   mpuGetData();
@@ -98,15 +105,6 @@ void loop()
   // mainLoopFrequency = 1/((micros() - lastMainLoopTime)*1e-6);
   // Serial.println(mainLoopFrequency);
   // lastMainLoopTime = micros();
-
-  
-   // consigne = ps2x.Analog(PSS_LY) - 128;
-  //  if (Serial.available()) {
-  //    int value = Serial.parseInt();
-  //    if (value)
-  //      consigne = value;
-  //  }
-  //  Serial.println(consigne);
 }
 
 void blink()
