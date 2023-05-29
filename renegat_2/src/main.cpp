@@ -30,6 +30,9 @@ float mainLoopFrequency = 0;
 /* Radio */
 extern byte keyValues[RADIO_FRAME_SIZE];
 
+/* Flight controller */
+float commands[NUMBER_OF_COMMANDS];   /* Commands table */
+
 /* ================================================================
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
@@ -70,6 +73,9 @@ void setup(void)
     return;
   };
 
+  /* Reset all commands */
+  for(int i = 0; i < NUMBER_OF_COMMANDS; i++)    commands[i] = 0;
+
   Serial.println("Setup successful. Beginning superloop...");
 }
 
@@ -85,10 +91,19 @@ void loop()
   radioReceiveData(keyValues);
 
   /* Display data received through radio */
-  radioDisplayData(keyValues);
+  // radioDisplayData(keyValues);
 
   /* Get MPU data */
   mpuGetData();
+
+  /* Display commands */
+  controllerGetCommands(commands);
+  Serial.print("Commands :\t");
+  for(int i = 0; i < NUMBER_OF_COMMANDS; i++){
+    Serial.print(commands[i]);
+    Serial.print("\t");
+  }
+  Serial.println();
 
   /* Print the measures */
   // mpuDisplayData();
