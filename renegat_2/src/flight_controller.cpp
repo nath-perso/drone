@@ -5,6 +5,7 @@
 #include "pins.h"
 #include "Arduino.h"
 #include "nRF24.h"
+#include "ESC.h"
 
 /* ================================================================
  * ===                         DEFINE                           ===
@@ -37,4 +38,16 @@ void controllerGetCommands(float *commands)
     commands[1] = (keyValues[ROLL_COMMAND_INDEX]    - 128)/128.0;
     commands[2] = (keyValues[PITCH_COMMAND_INDEX]   - 128)/128.0;
     commands[3] = (keyValues[YAW_COMMAND_INDEX]     - 128)/128.0;
+}
+
+/**
+ * @brief       Motor Mixing Algorithm : convert flight commands into motor setpoints
+ * @param       commands : [thrust, roll, pitch, yaw] commands
+ * @param       setpoints : motors setpoints table [Front right, front left, rear right, rear left]
+*/
+void controllerMMA(float *commands, int *setpoints) {
+    setpoints[0] = (commands[0] + commands[1] + commands[2] + commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Front right */
+    setpoints[1] = (commands[0] - commands[1] + commands[2] - commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Front left */
+    setpoints[2] = (commands[0] + commands[1] - commands[2] - commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Rear right */
+    setpoints[3] = (commands[0] - commands[1] - commands[2] + commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Rear left */
 }

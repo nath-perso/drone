@@ -31,7 +31,8 @@ float mainLoopFrequency = 0;
 extern byte keyValues[RADIO_FRAME_SIZE];
 
 /* Flight controller */
-float commands[NUMBER_OF_COMMANDS];   /* Commands table */
+float flight_commands[NUMBER_OF_COMMANDS];  /* Flight commands table */
+int   motors_setpoints[MOTOR_NUMBER];       /* Motors setpoints table */
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
@@ -74,7 +75,8 @@ void setup(void)
   };
 
   /* Reset all commands */
-  for(int i = 0; i < NUMBER_OF_COMMANDS; i++)    commands[i] = 0;
+  for(int i = 0; i < NUMBER_OF_COMMANDS; i++)    flight_commands[i] = 0;
+  for(int i = 0; i < MOTOR_NUMBER; i++)    motors_setpoints[i] = 0;
 
   Serial.println("Setup successful. Beginning superloop...");
 }
@@ -97,10 +99,19 @@ void loop()
   mpuGetData();
 
   /* Display commands */
-  controllerGetCommands(commands);
-  Serial.print("Commands :\t");
-  for(int i = 0; i < NUMBER_OF_COMMANDS; i++){
-    Serial.print(commands[i]);
+  controllerGetCommands(flight_commands);
+  // Serial.print("Commands :\t");
+  // for(int i = 0; i < NUMBER_OF_COMMANDS; i++){
+  //   Serial.print(flight_commands[i]);
+  //   Serial.print("\t");
+  // }
+  // Serial.println();
+
+  /* Display commands */
+  controllerMMA(flight_commands, motors_setpoints);
+  Serial.print("Setpoints :\t");
+  for(int i = 0; i < MOTOR_NUMBER; i++){
+    Serial.print(motors_setpoints[i]);
     Serial.print("\t");
   }
   Serial.println();
