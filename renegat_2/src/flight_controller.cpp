@@ -50,4 +50,10 @@ void controllerMMA(float *commands, int *setpoints) {
     setpoints[1] = (commands[0] - commands[1] + commands[2] - commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Front left */
     setpoints[2] = (commands[0] + commands[1] - commands[2] - commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Rear right */
     setpoints[3] = (commands[0] - commands[1] - commands[2] + commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Rear left */
+
+    /* Saturate setpoints */
+    setpoints[0] = constrain(setpoints[0], 0, ESC_MAX_CMD - ESC_MIN_CMD);
+    setpoints[1] = constrain(setpoints[1], 0, ESC_MAX_CMD - ESC_MIN_CMD);
+    setpoints[2] = constrain(setpoints[2], 0, ESC_MAX_CMD - ESC_MIN_CMD);
+    setpoints[3] = constrain(setpoints[3], 0, ESC_MAX_CMD - ESC_MIN_CMD);
 }

@@ -30,5 +30,6 @@
 bool escSetup();
 void escRun(int esc_num, int speed);
 void escRunAll(int speed);
+void escRunAllCommands(int *setpoints);
 
 #endif /* __ESC_H__ */

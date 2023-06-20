@@ -73,6 +73,18 @@ void escRunAll(int speed) {
 }
 
 /**
+ * @brief       Run all ESCs at corresponding setpoint
+ * @param       setpoints : motor speed setpoints, between 0 and max 
+ */
+void escRunAllCommands(int *setpoints) {
+
+    esc1.writeMicroseconds(ESC_MIN_CMD + setpoints[0]);
+    esc2.writeMicroseconds(ESC_MIN_CMD + setpoints[1]);
+    esc3.writeMicroseconds(ESC_MIN_CMD + setpoints[2]);
+    esc4.writeMicroseconds(ESC_MIN_CMD + setpoints[3]);
+}
+
+/**
  * @brief       Setup ESCs
  * @returns     True if successful
  */
@@ -81,7 +93,7 @@ bool escSetup() {
     esc2.attach(ESC_2_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
     esc3.attach(ESC_3_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
     esc4.attach(ESC_4_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
-
+    
     escRunAll(0);
     return true;
 }

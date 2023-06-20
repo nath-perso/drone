@@ -33,7 +33,6 @@ extern byte keyValues[RADIO_FRAME_SIZE];
 /* Flight controller */
 float flight_commands[NUMBER_OF_COMMANDS];  /* Flight commands table */
 int   motors_setpoints[MOTOR_NUMBER];       /* Motors setpoints table */
-
 /* ================================================================
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
@@ -115,6 +114,9 @@ void loop()
     Serial.print("\t");
   }
   Serial.println();
+
+  /* Run ESCs */
+  escRunAllCommands(motors_setpoints);
 
   /* Print the measures */
   // mpuDisplayData();
