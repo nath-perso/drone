@@ -31,5 +31,8 @@
 bool mpuSetup();
 void mpuGetData();
 void mpuDisplayData();
+float mpuGetRoll();
+float mpuGetPitch();
+float mpuGetYaw();
 
 #endif /* __MPU_H__ */

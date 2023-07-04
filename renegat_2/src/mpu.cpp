@@ -63,7 +63,7 @@ uint8_t devStatus;                  /* return status after each device operation
 uint16_t packetSize;                /* expected DMP packet size (default is 42 bytes) */
 uint16_t fifoCount;                 /* count of all bytes currently in FIFO */
 uint8_t fifoBuffer[64];             /* FIFO storage buffer */
-volatile bool mpuInterrupt = false; // indicates whether MPU interrupt pin has gone high
+volatile bool mpuInterrupt = false; /* indicates whether MPU interrupt pin has gone high */
 
 /* Orientation/motion vars */
 Quaternion quat;        /* [w, x, y, z]         quaternion container                          */
@@ -432,4 +432,31 @@ void mpuDisplayData()
   Serial.print("\t");
   Serial.println(accelWorld.z);
 #endif
+}
+
+/**
+ * @brief   Get roll value
+ * @returns roll value (rad)
+ */
+float mpuGetRoll()
+{
+  return (ypr[2]);
+}
+
+/**
+ * @brief   Get pitch value
+ * @returns pitch value (rad)
+ */
+float mpuGetPitch()
+{
+  return (ypr[1]);
+}
+
+/**
+ * @brief   Get yaw value
+ * @returns yaw value (rad)
+ */
+float mpuGetYaw()
+{
+  return (ypr[0]);
 }

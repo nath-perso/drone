@@ -74,14 +74,14 @@ void escRunAll(int speed) {
 
 /**
  * @brief       Run all ESCs at corresponding setpoint
- * @param       setpoints : motor speed setpoints, between 0 and max 
+ * @param       commands : motor speed commands, between 0 and max 
  */
-void escRunAllCommands(int *setpoints) {
+void escRunAllCommands(int *commands) {
 
-    esc1.writeMicroseconds(ESC_MIN_CMD + setpoints[0]);
-    esc2.writeMicroseconds(ESC_MIN_CMD + setpoints[1]);
-    esc3.writeMicroseconds(ESC_MIN_CMD + setpoints[2]);
-    esc4.writeMicroseconds(ESC_MIN_CMD + setpoints[3]);
+    esc1.writeMicroseconds(ESC_MIN_CMD + commands[0]);
+    esc2.writeMicroseconds(ESC_MIN_CMD + commands[1]);
+    esc3.writeMicroseconds(ESC_MIN_CMD + commands[2]);
+    esc4.writeMicroseconds(ESC_MIN_CMD + commands[3]);
 }
 
 /**

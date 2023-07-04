@@ -20,6 +20,6 @@
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
 void controllerGetCommands(float *commands);
-void controllerMMA(float *commands, int *setpoints);
+void controllerMMA(float *setpoints, int *commands);
 
 #endif /* __FLIGHT_CONTROLLER_H__ */

@@ -6,6 +6,7 @@
 #include "Arduino.h"
 #include "nRF24.h"
 #include "ESC.h"
+#include "mpu.h"
 
 /* ================================================================
  * ===                         DEFINE                           ===
@@ -15,6 +16,9 @@
 #define ROLL_COMMAND_INDEX      0
 #define PITCH_COMMAND_INDEX     2
 #define YAW_COMMAND_INDEX       4
+
+#define MAX_ANGLE   PI/2
+#define MIN_ANGLE   -PI/2
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -27,33 +31,97 @@ extern byte keyValues[RADIO_FRAME_SIZE];
  * ================================================================ */
 
 /**
+ * @brief       Compute roll command
+ * @param       raw_setpoint : roll raw setpoint from controller
+ * @return      Roll command (between -1 and 1)
+*/
+float controllerGetRollCommand(float raw_setpoint){
+    static float roll_last_error = 0;
+    static float roll_last_integral = 0;
+    static long roll_last_timestamp = 0;
+
+    const float Kp = 0.8;
+    const float Ki = 0;
+    const float Kd = 0;
+
+    float roll_value = mpuGetRoll();
+    float roll_error = roll_value - raw_setpoint;
+
+    float dt = (micros() - roll_last_timestamp)/1e6;
+    roll_last_timestamp = micros();
+
+    float roll_command = Kp*(roll_error) + Ki*(roll_last_integral + roll_error)*dt + Kd*(roll_error - roll_last_error);
+
+    roll_command = constrain(roll_command, -1, 1);
+
+    return (roll_command);
+}
+
+/**
+ * @brief       Compute pitch command
+ * @param       raw_setpoint : pitch raw setpoint from controller
+ * @return      Pitch command (between -1 and 1)
+*/
+float controllerGetPitchCommand(float raw_setpoint){
+    static float pitch_last_error = 0;
+    static float pitch_last_integral = 0;
+    static long pitch_last_timestamp = 0;
+
+    const float Kp = 0.8;
+    const float Ki = 0;
+    const float Kd = 0;
+
+    float pitch_value = mpuGetPitch();
+    float pitch_error = pitch_value - raw_setpoint;
+
+    float dt = (micros() - pitch_last_timestamp)/1e6;
+    pitch_last_timestamp = micros();
+
+    float pitch_command = Kp*(pitch_error) + Ki*(pitch_last_integral + pitch_error)*dt + Kd*(pitch_error - pitch_last_error);
+
+    pitch_command = constrain(pitch_command, -1, 1);
+
+    return (pitch_command);
+}
+
+/**
  * @brief       Convert key values into commands
  * @param       commands : [thrust, roll, pitch, yaw] commands
  */
 void controllerGetCommands(float *commands)
 {
-    if(keyValues[THRUST_UP_COMMAND_INDEX] & 0x0001) commands[0] = 1;
-    else    commands[0] = 0;
-    if(keyValues[THRUST_DOWN_COMMAND_INDEX] & 0x0002) commands[0]--;
-    commands[1] = (keyValues[ROLL_COMMAND_INDEX]    - 128)/128.0;
-    commands[2] = (keyValues[PITCH_COMMAND_INDEX]   - 128)/128.0;
-    commands[3] = (keyValues[YAW_COMMAND_INDEX]     - 128)/128.0;
+    static float thrust_raw_setpoint = 0;
+    float roll_raw_setpoint   = 0;
+    float pitch_raw_setpoint  = 0;
+    float yaw_raw_setpoint    = 0;
+
+    if(keyValues[THRUST_UP_COMMAND_INDEX] & 0x0001) thrust_raw_setpoint += 0.01;
+    if(keyValues[THRUST_DOWN_COMMAND_INDEX] & 0x0002) thrust_raw_setpoint -= 0.01;
+    thrust_raw_setpoint = constrain(thrust_raw_setpoint, 0, 1);
+
+    roll_raw_setpoint = (keyValues[ROLL_COMMAND_INDEX]    - 128)/128.0*MAX_ANGLE;
+    pitch_raw_setpoint = (keyValues[PITCH_COMMAND_INDEX]   - 128)/128.0*MAX_ANGLE;
+    yaw_raw_setpoint = (keyValues[YAW_COMMAND_INDEX]     - 128)/128.0*MAX_ANGLE;
+
+    commands[0] = thrust_raw_setpoint;
+    commands[1] = controllerGetRollCommand(roll_raw_setpoint);
+    commands[2] = controllerGetPitchCommand(pitch_raw_setpoint);
 }
 
 /**
- * @brief       Motor Mixing Algorithm : convert flight commands into motor setpoints
- * @param       commands : [thrust, roll, pitch, yaw] commands
- * @param       setpoints : motors setpoints table [Front right, front left, rear right, rear left]
+ * @brief       Motor Mixing Algorithm : convert flight commands (considered as setpoints) into motor commands
+ * @param       setpoints : [thrust, roll, pitch, yaw] flight commands
+ * @param       commands : motors commands table [Front right, front left, rear right, rear left]
 */
-void controllerMMA(float *commands, int *setpoints) {
-    setpoints[0] = (commands[0] + commands[1] + commands[2] + commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Front right */
-    setpoints[1] = (commands[0] - commands[1] + commands[2] - commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Front left */
-    setpoints[2] = (commands[0] + commands[1] - commands[2] - commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Rear right */
-    setpoints[3] = (commands[0] - commands[1] - commands[2] + commands[3])*(ESC_MAX_CMD - ESC_MIN_CMD)/NUMBER_OF_COMMANDS; /* Rear left */
+void controllerMMA(float *setpoints, int *commands) {
+    commands[0] = (setpoints[0] + setpoints[1] + setpoints[2] + setpoints[3])*(ESC_MAX_CMD - ESC_MIN_CMD); /* Front right */
+    commands[1] = (setpoints[0] - setpoints[1] + setpoints[2] - setpoints[3])*(ESC_MAX_CMD - ESC_MIN_CMD); /* Front left */
+    commands[2] = (setpoints[0] + setpoints[1] - setpoints[2] - setpoints[3])*(ESC_MAX_CMD - ESC_MIN_CMD); /* Rear right */
+    commands[3] = (setpoints[0] - setpoints[1] - setpoints[2] + setpoints[3])*(ESC_MAX_CMD - ESC_MIN_CMD); /* Rear left */
 
-    /* Saturate setpoints */
-    setpoints[0] = constrain(setpoints[0], 0, ESC_MAX_CMD - ESC_MIN_CMD);
-    setpoints[1] = constrain(setpoints[1], 0, ESC_MAX_CMD - ESC_MIN_CMD);
-    setpoints[2] = constrain(setpoints[2], 0, ESC_MAX_CMD - ESC_MIN_CMD);
-    setpoints[3] = constrain(setpoints[3], 0, ESC_MAX_CMD - ESC_MIN_CMD);
+    /* Saturate commands */
+    commands[0] = constrain(commands[0], 0, ESC_MAX_CMD - ESC_MIN_CMD)/2;
+    commands[1] = constrain(commands[1], 0, ESC_MAX_CMD - ESC_MIN_CMD)/2;
+    commands[2] = constrain(commands[2], 0, ESC_MAX_CMD - ESC_MIN_CMD)/2;
+    commands[3] = constrain(commands[3], 0, ESC_MAX_CMD - ESC_MIN_CMD)/2;
 }
