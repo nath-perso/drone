@@ -87,13 +87,42 @@ void escRunAllCommands(int *commands) {
 /**
  * @brief       Setup ESCs
  * @returns     True if successful
+ * @note        ESCs will beep power up on power up, but also at the first time after attaching the port (but only if you wait 5s) 
+ *              Then starts the arming sequence. 
+ *              If the command stays at 0, the arming sequence ends with one beep.
+ *              If calibration is needed, send max throttle command at the start of arming sequence for at least 3 seconds, 
+ *              then send min throttle command for at least 3 seconds.
  */
 bool escSetup() {
+    Serial.println("Setting up ESCs ...");
     esc1.attach(ESC_1_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
     esc2.attach(ESC_2_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
     esc3.attach(ESC_3_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
     esc4.attach(ESC_4_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
-    
-    escRunAll(0);
+
+    /* Wait for no reason, but we have to wait 5s for the ESCs to be ready for arming sequence */
+    delay(5000);
+
+    /* Arming sequence start */
+    if (ESC_CALIBRATION) {
+        Serial.println("ESC calibration...");
+        Serial.println("Sending max throttle for 3s");
+        escRunAll(ESC_MAX_CMD - ESC_MIN_CMD);
+        delay(3500);
+        
+        Serial.println("Sending min throttle for 3s");
+        escRunAll(0);
+        delay(3500);
+
+        Serial.println("Calibration complete.");
+    }
+    else {
+        Serial.println("Arming ESCs...");
+        escRunAll(0);
+        delay(2000);
+    }
+
+    /* End of arming sequence. You should have heared one low long beep followed by one high long beep. */
+    Serial.println("ESCs armed !");
     return true;
 }
