@@ -108,7 +108,7 @@ void loop()
 
   /* Display commands */
   controllerMMA(flight_commands, motors_commands);
-  Serial.print("Commands :\t");
+  // Serial.print("Commands :\t");
   for(int i = 0; i < MOTOR_NUMBER; i++){
     Serial.print(motors_commands[i]);
     Serial.print("\t");

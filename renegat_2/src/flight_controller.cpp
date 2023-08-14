@@ -25,6 +25,49 @@
  * ================================================================ */
 extern byte keyValues[RADIO_FRAME_SIZE];
 
+class PIDController {
+private:
+    float Kp;
+    float Ki;
+    float Kd;
+
+    float last_error;
+    long  last_timestamp;
+    float integral;
+
+    float min_integral;
+    float max_integral;
+
+public:
+    PIDController(float _Kp, float _Ki, float _Kd, float _min_integral, float _max_integral)
+        : Kp(_Kp), Ki(_Ki), Kd(_Kd), last_error(0), last_timestamp(0), integral(0), min_integral(_min_integral), max_integral(_max_integral) {}
+    
+    float computeCommand(float error) {
+        float dt = (micros() - last_timestamp)/1e6;
+
+        integral += error*dt;
+        float derivative = (error - last_error)/dt;
+
+        /* Anti-windup */
+        integral = constrain(integral, min_integral/Ki, max_integral/Ki);
+
+        float command = Kp*error + Ki*integral + Kd*derivative;
+        command = constrain(command, -1, 1);
+        
+        last_timestamp = micros();
+        return command;
+    }
+};
+
+float Kp_value = 1.5;
+float Ki_value = 0;
+float Kd_value = 0;
+
+float integral_limit = 0.5;
+
+PIDController rollPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit);
+PIDController pitchPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit);
+PIDController yawPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit);
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
@@ -36,23 +79,10 @@ extern byte keyValues[RADIO_FRAME_SIZE];
  * @return      Roll command (between -1 and 1)
 */
 float controllerGetRollCommand(float raw_setpoint){
-    static float roll_last_error = 0;
-    static float roll_last_integral = 0;
-    static long roll_last_timestamp = 0;
-
-    const float Kp = 0.4;
-    const float Ki = 0;
-    const float Kd = 0;
-
     float roll_value = mpuGetRoll();
     float roll_error = roll_value - raw_setpoint;
 
-    float dt = (micros() - roll_last_timestamp)/1e6;
-    roll_last_timestamp = micros();
-
-    float roll_command = Kp*(roll_error) + Ki*(roll_last_integral + roll_error)*dt + Kd*(roll_error - roll_last_error);
-
-    roll_command = constrain(roll_command, -1, 1);
+    float roll_command = rollPID.computeCommand(roll_error);
 
     return (roll_command);
 }
@@ -63,23 +93,10 @@ float controllerGetRollCommand(float raw_setpoint){
  * @return      Pitch command (between -1 and 1)
 */
 float controllerGetPitchCommand(float raw_setpoint){
-    static float pitch_last_error = 0;
-    static float pitch_last_integral = 0;
-    static long pitch_last_timestamp = 0;
-
-    const float Kp = 0.4;
-    const float Ki = 0;
-    const float Kd = 0;
-
     float pitch_value = mpuGetPitch();
     float pitch_error = pitch_value - raw_setpoint;
 
-    float dt = (micros() - pitch_last_timestamp)/1e6;
-    pitch_last_timestamp = micros();
-
-    float pitch_command = Kp*(pitch_error) + Ki*(pitch_last_integral + pitch_error)*dt + Kd*(pitch_error - pitch_last_error);
-
-    pitch_command = constrain(pitch_command, -1, 1);
+    float pitch_command = pitchPID.computeCommand(pitch_error);
 
     return (pitch_command);
 }
@@ -90,23 +107,10 @@ float controllerGetPitchCommand(float raw_setpoint){
  * @return      Yaw command (between -1 and 1)
 */
 float controllerGetYawCommand(float raw_setpoint){
-    static float yaw_last_error = 0;
-    static float yaw_last_integral = 0;
-    static long yaw_last_timestamp = 0;
-
-    const float Kp = 0.4;
-    const float Ki = 0;
-    const float Kd = 0;
-
     float yaw_value = mpuGetYaw();
     float yaw_error = yaw_value - raw_setpoint;
 
-    float dt = (micros() - yaw_last_timestamp)/1e6;
-    yaw_last_timestamp = micros();
-
-    float yaw_command = Kp*(yaw_error) + Ki*(yaw_last_integral + yaw_error)*dt + Kd*(yaw_error - yaw_last_error);
-
-    yaw_command = constrain(yaw_command, -1, 1);
+    float yaw_command = yawPID.computeCommand(yaw_error);
 
     return (yaw_command);
 }
@@ -148,8 +152,8 @@ void controllerMMA(float *setpoints, int *commands) {
     commands[3] = (setpoints[0] - setpoints[1] - setpoints[2] + setpoints[3])*(ESC_MAX_CMD - ESC_MIN_CMD); /* Rear left */
 
     /* Saturate commands */
-    commands[0] = constrain(commands[0], 0, ESC_MAX_CMD - ESC_MIN_CMD);
-    commands[1] = constrain(commands[1], 0, ESC_MAX_CMD - ESC_MIN_CMD);
-    commands[2] = constrain(commands[2], 0, ESC_MAX_CMD - ESC_MIN_CMD);
-    commands[3] = constrain(commands[3], 0, ESC_MAX_CMD - ESC_MIN_CMD);
+    commands[0] = constrain(commands[0], 0, (ESC_MAX_CMD - ESC_MIN_CMD)*ESC_CMD_SAT_FACTOR);
+    commands[1] = constrain(commands[1], 0, (ESC_MAX_CMD - ESC_MIN_CMD)*ESC_CMD_SAT_FACTOR);
+    commands[2] = constrain(commands[2], 0, (ESC_MAX_CMD - ESC_MIN_CMD)*ESC_CMD_SAT_FACTOR);
+    commands[3] = constrain(commands[3], 0, (ESC_MAX_CMD - ESC_MIN_CMD)*ESC_CMD_SAT_FACTOR);
 }

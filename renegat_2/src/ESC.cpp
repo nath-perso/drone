@@ -112,7 +112,7 @@ bool escSetup() {
         
         Serial.println("Sending min throttle for 3s");
         escRunAll(0);
-        delay(3500);
+        delay(6000);
 
         Serial.println("Calibration complete.");
     }
