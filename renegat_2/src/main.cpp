@@ -109,14 +109,32 @@ void loop()
   /* Display commands */
   controllerMMA(flight_commands, motors_commands);
   // Serial.print("Commands :\t");
-  for(int i = 0; i < MOTOR_NUMBER; i++){
-    Serial.print(motors_commands[i]);
-    Serial.print("\t");
-  }
-  Serial.println();
+  // for(int i = 0; i < MOTOR_NUMBER; i++){
+  //   Serial.print(motors_commands[i]);
+  //   Serial.print("\t");
+  // }
+  // Serial.println();
 
   /* Run ESCs */
   escRunAllCommands(motors_commands);
+
+  /* Set PID constants */
+  // if (Serial.available()) { 
+  //   float Kp_des = Serial.parseFloat();
+  //   Serial.println("Ki ? "); Serial.flush();
+  //   Serial.readStringUntil('\n');
+
+  //   while (!Serial.available()){Serial.flush();}
+  //   float Ki_des = Serial.parseFloat();
+  //   Serial.println("Kd ? ");Serial.flush();
+  //   Serial.readStringUntil('\n');
+
+  //   while (!Serial.available()){Serial.flush();}
+  //   float Kd_des = Serial.parseFloat();
+
+  //   controllerSetRollPID(Kp_des, Ki_des, Kd_des);
+  // }
+
 
   /* Print the measures */
   // mpuDisplayData();

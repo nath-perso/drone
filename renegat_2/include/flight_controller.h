@@ -21,5 +21,6 @@
  * ================================================================ */
 void controllerGetCommands(float *commands);
 void controllerMMA(float *setpoints, int *commands);
+void controllerSetRollPID(float Kp, float Ki, float Kd);
 
 #endif /* __FLIGHT_CONTROLLER_H__ */

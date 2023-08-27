@@ -17,8 +17,8 @@
 #define ROLL_COMMAND_INDEX      2
 #define YAW_COMMAND_INDEX       4
 
-#define MAX_ANGLE   PI/2
-#define MIN_ANGLE   -PI/2
+#define MAX_ANGLE   PI/20
+#define MIN_ANGLE   -PI/20
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -34,44 +34,77 @@ private:
     float last_error;
     long  last_timestamp;
     float integral;
+    float last_derivative;
+
+    float last_command;
+    float a0;
 
     float min_integral;
     float max_integral;
 
 public:
-    PIDController(float _Kp, float _Ki, float _Kd, float _min_integral, float _max_integral)
-        : Kp(_Kp), Ki(_Ki), Kd(_Kd), last_error(0), last_timestamp(0), integral(0), min_integral(_min_integral), max_integral(_max_integral) {}
+    PIDController(float _Kp, float _Ki, float _Kd, float _min_integral, float _max_integral, float _a0)
+        : Kp(_Kp), Ki(_Ki), Kd(_Kd), last_error(0), last_timestamp(0), integral(0), 
+        min_integral(_min_integral), max_integral(_max_integral), last_command(0), last_derivative(0), a0(_a0) {}
     
     float computeCommand(float error) {
         float dt = (micros() - last_timestamp)/1e6;
 
         integral += error*dt;
         float derivative = (error - last_error)/dt;
+        derivative = a0*derivative + (1 - a0)*last_derivative;
 
         /* Anti-windup */
         integral = constrain(integral, min_integral/Ki, max_integral/Ki);
 
         float command = Kp*error + Ki*integral + Kd*derivative;
         command = constrain(command, -1, 1);
-        
+
+        last_command = command;
+        last_error = error;
+        last_derivative = derivative;
         last_timestamp = micros();
         return command;
     }
+
+    void setConstants(float Kp_, float Ki_, float Kd_) 
+    {
+        Kp = Kp_;
+        Ki = Ki_;
+        Kd = Kd_;
+
+        Serial.print(Kp); Serial.print("\t");
+        Serial.print(Ki); Serial.print("\t");
+        Serial.print(Kd); Serial.print("\n");
+        Serial.flush();
+        Serial.readStringUntil('\n');
+    }
 };
 
-float Kp_value = 1.5;
-float Ki_value = 0;
-float Kd_value = 0;
+float Kp_value = 0.1;
+float Ki_value = 0.1;
+float Kd_value = 0.01;
 
-float integral_limit = 0.5;
+float integral_limit = 0.1;
+float a0_value = 0.1;
 
-PIDController rollPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit);
-PIDController pitchPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit);
-PIDController yawPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit);
+PIDController rollPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
+PIDController pitchPID(0, 0, 0, -integral_limit, integral_limit, a0_value);
+PIDController yawPID(0, 0, 0, -integral_limit, integral_limit, a0_value);
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
+
+/**
+ * @brief       Set roll PID constants
+ * @param       Kp : Proportional constant,
+ * @param       Ki : Integral constant
+ * @param       Kd : Derivative constant
+*/
+void controllerSetRollPID(float Kp, float Ki, float Kd){
+    rollPID.setConstants(Kp, Ki, Kd);
+}
 
 /**
  * @brief       Compute roll command
@@ -130,9 +163,9 @@ void controllerGetCommands(float *commands)
     if(keyValues[THRUST_DOWN_COMMAND_INDEX] & 0x0002) thrust_raw_setpoint -= 0.001;
     thrust_raw_setpoint = constrain(thrust_raw_setpoint, 0, 1);
 
-    roll_raw_setpoint = (keyValues[ROLL_COMMAND_INDEX]    - 128)/128.0*MAX_ANGLE;
-    pitch_raw_setpoint = (keyValues[PITCH_COMMAND_INDEX]   - 128)/128.0*MAX_ANGLE;
-    yaw_raw_setpoint = (keyValues[YAW_COMMAND_INDEX]     - 128)/128.0*MAX_ANGLE;
+    roll_raw_setpoint = pow((keyValues[ROLL_COMMAND_INDEX]    - 128)/128.0, 5)*MAX_ANGLE;
+    pitch_raw_setpoint = pow((keyValues[PITCH_COMMAND_INDEX]   - 128)/128.0, 5)*MAX_ANGLE;
+    yaw_raw_setpoint = pow((keyValues[YAW_COMMAND_INDEX]     - 128)/128.0, 5)*MAX_ANGLE;
 
     commands[0] = thrust_raw_setpoint;
     commands[1] = controllerGetRollCommand(roll_raw_setpoint);
