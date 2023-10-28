@@ -81,12 +81,12 @@ public:
     }
 };
 
-float Kp_value = 0.1;
+float Kp_value = 0.08; // 0.1
 float Ki_value = 0.1;
-float Kd_value = 0.01;
+float Kd_value = 0.005; // 0.01
 
 float integral_limit = 0.1;
-float a0_value = 0.1;
+float a0_value = 0.4;
 
 PIDController rollPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
 PIDController pitchPID(0, 0, 0, -integral_limit, integral_limit, a0_value);

@@ -37,8 +37,8 @@
 
 /* Display */
 // #define MPU_DISPLAY_QUATERNIONS
-// #define MPU_DISPLAY_ACCEL
-// #define MPU_DISPLAY_GYRO
+#define MPU_DISPLAY_ACCEL
+#define MPU_DISPLAY_GYRO
 // #define MPU_DISPLAY_EULER
 #define MPU_DISPLAY_YAWPITCHROLL
 // #define MPU_DISPLAY_ACCEL_LOCAL
@@ -78,6 +78,38 @@ float ypr[3];           /* [yaw, pitch, roll]   yaw/pitch/roll container and gra
 /* ================================================================
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
+
+/**
+ * @brief   Apply low-pass filter on input data
+ * @returns Filtered data
+ */
+float lowPassFilter(float data, float previous_data, float a0)
+{
+  if (a0 > 1) a0 = 1;
+  if (a0 < 0) a0 = 0;
+  return (a0*data + (1 - a0)*previous_data);
+}
+
+/**
+ * @brief   Apply low-pass filter on MPU raw data
+ */
+void mpuGetRawDataFiltered(VectorInt16 *accel_data, VectorInt16 *gyro_data, float a0)
+{
+  if (a0 > 1) a0 = 1;
+  if (a0 < 0) a0 = 0;
+
+  VectorInt16 new_accel;
+  VectorInt16 new_gyro;
+
+  mpu.getMotion6(&new_accel.x, &new_accel.y, &new_accel.z, &new_gyro.x, &new_gyro.y, &new_gyro.z);
+
+  accel_data->x = a0*new_accel.x + (1 - a0)*accel_data->x;
+  accel_data->y = a0*new_accel.y + (1 - a0)*accel_data->y;
+  accel_data->z = a0*new_accel.z + (1 - a0)*accel_data->z;
+  gyro_data->x = a0*new_gyro.x + (1 - a0)*gyro_data->x;
+  gyro_data->y = a0*new_gyro.y + (1 - a0)*gyro_data->y;
+  gyro_data->z = a0*new_gyro.z + (1 - a0)*gyro_data->z;
+}
 
 /**
  * @brief   Set acceleration and gyroscopic offsets
@@ -275,7 +307,7 @@ void mpuComputeRollPitchYawComplementaryFilter(VectorInt16 accel_data, VectorInt
   float dt = (micros() - old_time) * 1e-6;
   old_time = micros();
 
-  float cutoff_frequency = 0.5; /* Complementary filter cutoff frequency (Hz). The lower the cutoff, the more we trust the gyro. */
+  float cutoff_frequency = 1; /* Complementary filter cutoff frequency (Hz). The lower the cutoff, the more we trust the gyro. */
   float K = (1 / (2 * PI * cutoff_frequency)) / (1 / (2 * PI * cutoff_frequency) + dt);
 
   /* Convert acceleration data to floats */
@@ -321,9 +353,9 @@ void mpuComputeRollPitchYawComplementaryFilter(VectorInt16 accel_data, VectorInt
   // Serial.print('\n');
 
   /* Ouptut data */
-  out_data[0] = yaw;
-  out_data[1] = pitch_cf;
-  out_data[2] = roll_cf;
+  out_data[0] = lowPassFilter(yaw, out_data[0], 0.8);
+  out_data[1] = lowPassFilter(pitch_cf, out_data[1], 0.8);
+  out_data[2] = lowPassFilter(roll_cf, out_data[2], 0.8);
 }
 
 /**
@@ -362,7 +394,8 @@ void mpuGetData()
     Serial.println("Failed to get current FIFO Packet from MPU DMP");
   }
 #else
-  mpu.getMotion6(&accel.x, &accel.y, &accel.z, &gyro.x, &gyro.y, &gyro.z);
+  // mpu.getMotion6(&accel.x, &accel.y, &accel.z, &gyro.x, &gyro.y, &gyro.z);
+  mpuGetRawDataFiltered(&accel, &gyro, 0.05);
 #ifdef COMPUTE_YAWPITCHROLL
   mpuComputeRollPitchYawComplementaryFilter(accel, gyro, ypr);
 #endif
@@ -382,7 +415,8 @@ void mpuDisplayData()
   Serial.print("\t");
   Serial.print(quat.y);
   Serial.print("\t");
-  Serial.println(quat.z);
+  Serial.print(quat.z);
+  Serial.print("\t\t");
 #endif
 #ifdef MPU_DISPLAY_ACCEL
   Serial.print("Raw_acceleration\t");
@@ -390,7 +424,8 @@ void mpuDisplayData()
   Serial.print("\t");
   Serial.print(accel.y);
   Serial.print("\t");
-  Serial.println(accel.z);
+  Serial.print(accel.z);
+  Serial.print("\t\t");
 #endif
 #ifdef MPU_DISPLAY_GYRO
   Serial.print("Raw_gyro\t");
@@ -398,7 +433,8 @@ void mpuDisplayData()
   Serial.print("\t");
   Serial.print(gyro.y);
   Serial.print("\t");
-  Serial.println(gyro.z);
+  Serial.print(gyro.z);
+  Serial.print("\t\t");
 #endif
 #ifdef MPU_DISPLAY_EULER
   Serial.print("Euler_angles\t");
@@ -406,7 +442,8 @@ void mpuDisplayData()
   Serial.print("\t");
   Serial.print(euler[1] * 180 / M_PI);
   Serial.print("\t");
-  Serial.println(euler[2] * 180 / M_PI);
+  Serial.print(euler[2] * 180 / M_PI);
+  Serial.print("\t\t");
 #endif
 #ifdef MPU_DISPLAY_YAWPITCHROLL
   Serial.print("Yaw/Pitch/Roll\t");
@@ -414,7 +451,8 @@ void mpuDisplayData()
   Serial.print("\t");
   Serial.print(ypr[1] * 180 / M_PI);
   Serial.print("\t");
-  Serial.println(ypr[2] * 180 / M_PI);
+  Serial.print(ypr[2] * 180 / M_PI);
+  Serial.print("\t\t");
 #endif
 #ifdef MPU_DISPLAY_ACCEL_LOCAL
   Serial.print("Local_acceleration\t");
@@ -422,7 +460,8 @@ void mpuDisplayData()
   Serial.print("\t");
   Serial.print(accelLocal.y);
   Serial.print("\t");
-  Serial.println(accelLocal.z);
+  Serial.print(accelLocal.z);
+  Serial.print("\t\t");
 #endif
 #ifdef MPU_DISPLAY_ACCEL_WORLD
   Serial.print("World_acceleration\t");
@@ -430,8 +469,10 @@ void mpuDisplayData()
   Serial.print("\t");
   Serial.print(accelWorld.y);
   Serial.print("\t");
-  Serial.println(accelWorld.z);
+  Serial.print(accelWorld.z);
+  Serial.print("\t\t");
 #endif
+Serial.println();
 }
 
 /**
