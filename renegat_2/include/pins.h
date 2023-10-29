@@ -21,5 +21,7 @@
 #define ESC_3_PIN   9
 #define ESC_4_PIN   10
 
+/* Battery pins */
+#define BATTERY_VOLTAGE_PIN     A0
 
 #endif /* __PINS_H__ */

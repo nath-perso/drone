@@ -12,6 +12,8 @@
 #include "flight_controller.h"
 
 #define BLINK_DELAY 200 /* (ms) */
+#define BATTERY_CONVERTER 234/11.6  /* (cnts/V) */
+#define BATTERY_VOLTAGE_WARNING   9*BATTERY_CONVERTER   /* (V) */
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -37,12 +39,14 @@ int   motors_commands[MOTOR_NUMBER];       /* Motors setpoints table */
  * ===                        FUNCTIONS                         ===
  * ================================================================ */
 
+void checkBatteryVoltage();
 void blink();
 
 void setup(void)
 {
   /* Pins setup */
   pinMode(LED_PIN, OUTPUT);
+  pinMode(BATTERY_VOLTAGE_PIN, INPUT);
 
   /* Serial port setup */
   Serial.begin(115200);
@@ -140,12 +144,8 @@ void loop()
   mpuDisplayData();
   delay(10);
 
-  /* Blink */
-  if (millis() - blinkLastTime > BLINK_DELAY)
-  {
-    blink();
-    blinkLastTime = millis();
-  }
+  /* Check battery voltage */
+  checkBatteryVoltage();
 
   /* Frequency measure */
   // mainLoopFrequency = 1/((micros() - lastMainLoopTime)*1e-6);
@@ -157,4 +157,20 @@ void blink()
 {
   blinkState = !blinkState;
   digitalWrite(LED_PIN, blinkState);
+}
+
+
+void checkBatteryVoltage()
+{
+  int voltage = analogRead(BATTERY_VOLTAGE_PIN);
+  if (voltage < BATTERY_VOLTAGE_WARNING)
+  {
+    /* Blink */
+    if (millis() - blinkLastTime > BLINK_DELAY)
+    {
+      blink();
+      blinkLastTime = millis();
+    }
+  }
+  else digitalWrite(LED_PIN, LOW);
 }
