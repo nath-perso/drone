@@ -44,14 +44,22 @@ void blink();
 
 void setup(void)
 {
+  /* ESC setup */
+  if (!escSetup())
+  {
+    Serial.println("Failed to setup ESCs. Exiting setup ...");
+    setup_error = 1;
+    return;
+  };
+
   /* Pins setup */
   pinMode(LED_PIN, OUTPUT);
   pinMode(BATTERY_VOLTAGE_PIN, INPUT);
 
   /* Serial port setup */
   Serial.begin(115200);
-  while (!Serial)
-    delay(10);
+  // while (!Serial)
+  //   delay(10);
 
   /* MPU setup */
   if (!mpuSetup())
@@ -65,14 +73,6 @@ void setup(void)
   if (!radioSetup())
   {
     Serial.println("Failed to setup radio. Exiting setup ...");
-    setup_error = 1;
-    return;
-  };
-
-  /* ESC setup */
-  if (!escSetup())
-  {
-    Serial.println("Failed to setup ESCs. Exiting setup ...");
     setup_error = 1;
     return;
   };

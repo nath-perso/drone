@@ -29,9 +29,9 @@ Servo esc1, esc2, esc3, esc4;
  */
 void escRun(int esc_num, int speed) {
     /* Saturate speed */
-    if (ESC_MIN_CMD + speed > ESC_MAX_CMD)
+    if (speed > ESC_MAX_SPEED)
     {
-        speed = ESC_MAX_CMD - ESC_MIN_CMD;
+        speed = ESC_MAX_SPEED;
     }
     
    switch (esc_num)
@@ -60,15 +60,26 @@ void escRun(int esc_num, int speed) {
  */
 void escRunAll(int speed) {
     /* Saturate speed */
-    if (ESC_MIN_CMD + speed > ESC_MAX_CMD)
+    if (speed > ESC_MAX_SPEED)
     {
-        speed = ESC_MAX_CMD - ESC_MIN_CMD;
+        speed = ESC_MAX_SPEED;
     }
 
     esc1.writeMicroseconds(ESC_MIN_CMD + speed);
     esc2.writeMicroseconds(ESC_MIN_CMD + speed);
     esc3.writeMicroseconds(ESC_MIN_CMD + speed);
     esc4.writeMicroseconds(ESC_MIN_CMD + speed);
+}
+
+/**
+ * @brief       Run all ESCs at max throttle (for calibration)
+ */
+void escRunAllMaxThrottle() {
+
+    esc1.writeMicroseconds(ESC_MAX_CMD);
+    esc2.writeMicroseconds(ESC_MAX_CMD);
+    esc3.writeMicroseconds(ESC_MAX_CMD);
+    esc4.writeMicroseconds(ESC_MAX_CMD);
 }
 
 /**
@@ -94,30 +105,32 @@ void escRunAllCommands(int *commands) {
  */
 bool escSetup() {
     Serial.println("Setting up ESCs ...");
+    escRunAll(ESC_MIN_SPEED);
     esc1.attach(ESC_1_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
     esc2.attach(ESC_2_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
     esc3.attach(ESC_3_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
     esc4.attach(ESC_4_PIN, ESC_MIN_CMD, ESC_MAX_CMD);
 
     /* Wait for no reason, but we have to wait 5s for the ESCs to be ready for arming sequence */
+    escRunAll(ESC_MIN_SPEED);
     delay(5000);
 
     /* Arming sequence start */
     if (ESC_CALIBRATION) {
         Serial.println("ESC calibration...");
         Serial.println("Sending max throttle for 3s");
-        escRunAll(ESC_MAX_CMD - ESC_MIN_CMD);
-        delay(3500);
+        escRunAllMaxThrottle();
+        delay(6000);
         
         Serial.println("Sending min throttle for 3s");
-        escRunAll(0);
+        escRunAll(ESC_MIN_SPEED);
         delay(6000);
 
         Serial.println("Calibration complete.");
     }
     else {
         Serial.println("Arming ESCs...");
-        escRunAll(0);
+        escRunAll(ESC_MIN_SPEED);
         delay(2000);
     }
 

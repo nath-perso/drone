@@ -89,7 +89,7 @@ float integral_limit = 0.1;
 float a0_value = 0.4;
 
 PIDController rollPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
-PIDController pitchPID(0, 0, 0, -integral_limit, integral_limit, a0_value);
+PIDController pitchPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
 PIDController yawPID(0, 0, 0, -integral_limit, integral_limit, a0_value);
 
 /* ================================================================
