@@ -17,12 +17,12 @@
 
 /* Offsets */
 // #define MPU_CALIBRATION
-#define X_ACCEL_OFFSET  -3924   /* Note : offsets are defined with the highest resolution (see Scale ranges) */
-#define Y_ACCEL_OFFSET  -44
-#define Z_ACCEL_OFFSET  813
-#define X_GYRO_OFFSET   43
-#define Y_GYRO_OFFSET   3
-#define Z_GYRO_OFFSET   55
+#define X_ACCEL_OFFSET  288   /* Note : offsets are defined with the highest resolution (see Scale ranges) */
+#define Y_ACCEL_OFFSET  -3434
+#define Z_ACCEL_OFFSET  1697
+#define X_GYRO_OFFSET   127
+#define Y_GYRO_OFFSET   -36
+#define Z_GYRO_OFFSET   12
 
 /* Scale ranges */
 #define MPU6050_ACCEL_RANGE   MPU6050_ACCEL_FS_2    /* Accelerometer full-scale range : +/- 2, 4, 8 or 16g */
@@ -124,6 +124,19 @@ void mpuSetOffsets()
   mpu.setZGyroOffset(Z_GYRO_OFFSET);
 }
 
+
+/**
+ * @brief   Calibrate and set offsets
+ */
+void mpuCalibrate()
+{
+  mpu.CalibrateAccel(6);
+  mpu.CalibrateGyro(6);
+  Serial.print("\t");
+  mpu.PrintActiveOffsets();
+}
+
+
 /**
  * @brief   Indicates that MPU interrupt pin has gone high
  */
@@ -223,17 +236,6 @@ bool mpuSetup()
 
   Serial.println("MPU6050 ready to go");
   return true;
-}
-
-/**
- * @brief   Calibrate and set offsets
- */
-void mpuCalibrate()
-{
-  mpu.CalibrateAccel(6);
-  mpu.CalibrateGyro(6);
-  Serial.print("\t");
-  mpu.PrintActiveOffsets();
 }
 
 /**

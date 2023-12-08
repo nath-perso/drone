@@ -18,7 +18,7 @@
 
 #define ESC_MIN_CMD     1000
 #define ESC_MAX_CMD     2000
-#define ESC_CMD_SAT_FACTOR     0.2
+#define ESC_CMD_SAT_FACTOR     0.5
 
 #define ESC_MAX_SPEED   (int)((ESC_MAX_CMD - ESC_MIN_CMD)*ESC_CMD_SAT_FACTOR)
 #define ESC_MIN_SPEED   0

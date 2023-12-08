@@ -44,8 +44,13 @@ private:
 
 public:
     PIDController(float _Kp, float _Ki, float _Kd, float _min_integral, float _max_integral, float _a0)
-        : Kp(_Kp), Ki(_Ki), Kd(_Kd), last_error(0), last_timestamp(0), integral(0), 
-        min_integral(_min_integral), max_integral(_max_integral), last_command(0), last_derivative(0), a0(_a0) {}
+        : Kp(_Kp), Ki(_Ki), Kd(_Kd), 
+        last_error(0), last_timestamp(0), 
+        integral(0), last_derivative(0), 
+        last_command(0), a0(_a0),
+        min_integral(_min_integral), 
+        max_integral(_max_integral)
+        {}
     
     float computeCommand(float error) {
         float dt = (micros() - last_timestamp)/1e6;
