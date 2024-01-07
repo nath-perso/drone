@@ -17,8 +17,8 @@
 #define ROLL_COMMAND_INDEX      2
 #define YAW_COMMAND_INDEX       4
 
-#define MAX_ANGLE   PI/20
-#define MIN_ANGLE   -PI/20
+#define MAX_ANGLE   PI/40
+#define MIN_ANGLE   -PI/40
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -53,7 +53,7 @@ public:
         {}
     
     float computeCommand(float error) {
-        float dt = (micros() - last_timestamp)/1e6;
+        float dt = max((micros() - last_timestamp)/1e6, 1e-6);
 
         integral += error*dt;
         float derivative = (error - last_error)/dt;
@@ -87,7 +87,7 @@ public:
 };
 
 float Kp_value = 0.08; // 0.1
-float Ki_value = 0.1;
+float Ki_value = 0; //0.1;
 float Kd_value = 0.005; // 0.01
 
 float integral_limit = 0.1;
@@ -164,8 +164,8 @@ void controllerGetCommands(float *commands)
     float pitch_raw_setpoint  = 0;
     float yaw_raw_setpoint    = 0;
 
-    if(keyValues[THRUST_UP_COMMAND_INDEX] & 0x0001) thrust_raw_setpoint += 0.001;
-    if(keyValues[THRUST_DOWN_COMMAND_INDEX] & 0x0002) thrust_raw_setpoint -= 0.001;
+    if(keyValues[THRUST_UP_COMMAND_INDEX] & 0x0001) thrust_raw_setpoint += 0.002;
+    if(keyValues[THRUST_DOWN_COMMAND_INDEX] & 0x0002) thrust_raw_setpoint -= 0.002;
     thrust_raw_setpoint = constrain(thrust_raw_setpoint, 0, 1);
 
     roll_raw_setpoint = pow((keyValues[ROLL_COMMAND_INDEX]    - 128)/128.0, 5)*MAX_ANGLE;

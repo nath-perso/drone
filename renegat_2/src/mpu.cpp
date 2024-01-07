@@ -17,12 +17,12 @@
 
 /* Offsets */
 // #define MPU_CALIBRATION
-#define X_ACCEL_OFFSET  288   /* Note : offsets are defined with the highest resolution (see Scale ranges) */
-#define Y_ACCEL_OFFSET  -3434
-#define Z_ACCEL_OFFSET  1697
-#define X_GYRO_OFFSET   127
-#define Y_GYRO_OFFSET   -36
-#define Z_GYRO_OFFSET   12
+#define X_ACCEL_OFFSET  312
+#define Y_ACCEL_OFFSET  -3432
+#define Z_ACCEL_OFFSET  1701
+#define X_GYRO_OFFSET   126
+#define Y_GYRO_OFFSET   -37
+#define Z_GYRO_OFFSET   7
 
 /* Scale ranges */
 #define MPU6050_ACCEL_RANGE   MPU6050_ACCEL_FS_2    /* Accelerometer full-scale range : +/- 2, 4, 8 or 16g */
@@ -103,12 +103,12 @@ void mpuGetRawDataFiltered(VectorInt16 *accel_data, VectorInt16 *gyro_data, floa
 
   mpu.getMotion6(&new_accel.x, &new_accel.y, &new_accel.z, &new_gyro.x, &new_gyro.y, &new_gyro.z);
 
-  accel_data->x = a0*new_accel.x + (1 - a0)*accel_data->x;
-  accel_data->y = a0*new_accel.y + (1 - a0)*accel_data->y;
-  accel_data->z = a0*new_accel.z + (1 - a0)*accel_data->z;
-  gyro_data->x = a0*new_gyro.x + (1 - a0)*gyro_data->x;
-  gyro_data->y = a0*new_gyro.y + (1 - a0)*gyro_data->y;
-  gyro_data->z = a0*new_gyro.z + (1 - a0)*gyro_data->z;
+  accel_data->x = lowPassFilter(new_accel.x, accel_data->x, a0);
+  accel_data->y = lowPassFilter(new_accel.y, accel_data->y, a0);
+  accel_data->z = lowPassFilter(new_accel.z, accel_data->z, a0);
+  gyro_data->x = lowPassFilter(new_gyro.x, gyro_data->x, a0);
+  gyro_data->y = lowPassFilter(new_gyro.y, gyro_data->y, a0);
+  gyro_data->z = lowPassFilter(new_gyro.z, gyro_data->z, a0);
 }
 
 /**
@@ -176,6 +176,9 @@ bool mpuSetup()
   /* Set full scale ranges */
   mpu.setFullScaleAccelRange(MPU6050_ACCEL_RANGE);
   mpu.setFullScaleGyroRange(MPU6050_GYRO_RANGE);
+
+  /* Set filtering parameters */
+  mpu.setDLPFMode(MPU6050_DLPF_BW_10);
 
 #ifdef MPU_USE_DMP
   /* Initialize DMP */
@@ -396,8 +399,8 @@ void mpuGetData()
     Serial.println("Failed to get current FIFO Packet from MPU DMP");
   }
 #else
-  // mpu.getMotion6(&accel.x, &accel.y, &accel.z, &gyro.x, &gyro.y, &gyro.z);
-  mpuGetRawDataFiltered(&accel, &gyro, 0.05);
+  mpu.getMotion6(&accel.x, &accel.y, &accel.z, &gyro.x, &gyro.y, &gyro.z);
+  // mpuGetRawDataFiltered(&accel, &gyro, 1);   //0.05
 #ifdef COMPUTE_YAWPITCHROLL
   mpuComputeRollPitchYawComplementaryFilter(accel, gyro, ypr);
 #endif
