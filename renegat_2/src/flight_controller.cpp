@@ -95,7 +95,7 @@ float a0_value = 0.4;
 
 PIDController rollPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
 PIDController pitchPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
-PIDController yawPID(0, 0, 0, -integral_limit, integral_limit, a0_value);
+PIDController yawPID(Kp_value, Ki_value, 0, -integral_limit, integral_limit, a0_value);
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
@@ -175,7 +175,7 @@ void controllerGetCommands(float *commands)
     commands[0] = thrust_raw_setpoint;
     commands[1] = controllerGetRollCommand(roll_raw_setpoint);
     commands[2] = controllerGetPitchCommand(pitch_raw_setpoint);
-    commands[3] = 0;    // controllerGetYawCommand(yaw_raw_setpoint);
+    commands[3] = controllerGetYawCommand(yaw_raw_setpoint);
 }
 
 /**

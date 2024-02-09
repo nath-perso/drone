@@ -20,13 +20,13 @@
 #define X_ACCEL_OFFSET  312
 #define Y_ACCEL_OFFSET  -3432
 #define Z_ACCEL_OFFSET  1701
-#define X_GYRO_OFFSET   126
-#define Y_GYRO_OFFSET   -37
-#define Z_GYRO_OFFSET   7
+#define X_GYRO_OFFSET   122
+#define Y_GYRO_OFFSET   -65
+#define Z_GYRO_OFFSET   122
 
 /* Scale ranges */
-#define MPU6050_ACCEL_RANGE   MPU6050_ACCEL_FS_2    /* Accelerometer full-scale range : +/- 2, 4, 8 or 16g */
-#define MPU6050_GYRO_RANGE    MPU6050_GYRO_FS_250   /* Accelerometer full-scale range : +/- 250, 500, 1000 or 2000 deg/s */
+#define MPU6050_ACCEL_RANGE   MPU6050_ACCEL_FS_16    /* Accelerometer full-scale range : +/- 2, 4, 8 or 16g */
+#define MPU6050_GYRO_RANGE    MPU6050_GYRO_FS_2000   /* Accelerometer full-scale range : +/- 250, 500, 1000 or 2000 deg/s */
 #define MPU6050_HALF_RANGE_COUNTS   32767         /* Number of counts from 0 to maximum range value */
 
 /* Computations */
@@ -178,7 +178,7 @@ bool mpuSetup()
   mpu.setFullScaleGyroRange(MPU6050_GYRO_RANGE);
 
   /* Set filtering parameters */
-  mpu.setDLPFMode(MPU6050_DLPF_BW_10);
+  mpu.setDLPFMode(MPU6050_DLPF_BW_5);
 
 #ifdef MPU_USE_DMP
   /* Initialize DMP */
@@ -312,7 +312,7 @@ void mpuComputeRollPitchYawComplementaryFilter(VectorInt16 accel_data, VectorInt
   float dt = (micros() - old_time) * 1e-6;
   old_time = micros();
 
-  float cutoff_frequency = 1; /* Complementary filter cutoff frequency (Hz). The lower the cutoff, the more we trust the gyro. */
+  float cutoff_frequency = 0.5; /* Complementary filter cutoff frequency (Hz). The lower the cutoff, the more we trust the gyro. */
   float K = (1 / (2 * PI * cutoff_frequency)) / (1 / (2 * PI * cutoff_frequency) + dt);
 
   /* Convert acceleration data to floats */
