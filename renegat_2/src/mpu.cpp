@@ -20,9 +20,9 @@
 #define X_ACCEL_OFFSET  312
 #define Y_ACCEL_OFFSET  -3432
 #define Z_ACCEL_OFFSET  1701
-#define X_GYRO_OFFSET   122
-#define Y_GYRO_OFFSET   -65
-#define Z_GYRO_OFFSET   122
+#define X_GYRO_OFFSET   96 //122
+#define Y_GYRO_OFFSET   -45 //-65
+#define Z_GYRO_OFFSET   32 //122
 
 /* Scale ranges */
 #define MPU6050_ACCEL_RANGE   MPU6050_ACCEL_FS_16    /* Accelerometer full-scale range : +/- 2, 4, 8 or 16g */
@@ -413,7 +413,7 @@ void mpuGetData()
 void mpuDisplayData()
 {
 #ifdef MPU_DISPLAY_QUATERNIONS
-  Serial.print("Quaternions\t");
+  // Serial.print("Quaternions\t");
   Serial.print(quat.w);
   Serial.print("\t");
   Serial.print(quat.x);
@@ -421,43 +421,43 @@ void mpuDisplayData()
   Serial.print(quat.y);
   Serial.print("\t");
   Serial.print(quat.z);
-  Serial.print("\t\t");
+  Serial.print("\t");
 #endif
 #ifdef MPU_DISPLAY_ACCEL
-  Serial.print("Raw_acceleration\t");
+  // Serial.print("Raw_acceleration\t");
   Serial.print(accel.x);
   Serial.print("\t");
   Serial.print(accel.y);
   Serial.print("\t");
   Serial.print(accel.z);
-  Serial.print("\t\t");
+  Serial.print("\t");
 #endif
 #ifdef MPU_DISPLAY_GYRO
-  Serial.print("Raw_gyro\t");
+  // Serial.print("Raw_gyro\t");
   Serial.print(gyro.x);
   Serial.print("\t");
   Serial.print(gyro.y);
   Serial.print("\t");
   Serial.print(gyro.z);
-  Serial.print("\t\t");
+  Serial.print("\t");
 #endif
 #ifdef MPU_DISPLAY_EULER
-  Serial.print("Euler_angles\t");
+  // Serial.print("Euler_angles\t");
   Serial.print(euler[0] * 180 / M_PI);
   Serial.print("\t");
   Serial.print(euler[1] * 180 / M_PI);
   Serial.print("\t");
   Serial.print(euler[2] * 180 / M_PI);
-  Serial.print("\t\t");
+  Serial.print("\t");
 #endif
 #ifdef MPU_DISPLAY_YAWPITCHROLL
-  Serial.print("Yaw/Pitch/Roll\t");
+  // Serial.print("Yaw/Pitch/Roll\t");
   Serial.print(ypr[0] * 180 / M_PI);
   Serial.print("\t");
   Serial.print(ypr[1] * 180 / M_PI);
   Serial.print("\t");
   Serial.print(ypr[2] * 180 / M_PI);
-  Serial.print("\t\t");
+  Serial.print("\t");
 #endif
 #ifdef MPU_DISPLAY_ACCEL_LOCAL
   Serial.print("Local_acceleration\t");
@@ -477,7 +477,7 @@ void mpuDisplayData()
   Serial.print(accelWorld.z);
   Serial.print("\t\t");
 #endif
-Serial.println();
+// Serial.println();
 }
 
 /**
@@ -505,4 +505,13 @@ float mpuGetPitch()
 float mpuGetYaw()
 {
   return (ypr[0]);
+}
+
+/**
+ * @brief   Get yaw speed value
+ * @returns yaw speed value
+ */
+float mpuGetYawSpeed()
+{
+  return (gyro.z);
 }

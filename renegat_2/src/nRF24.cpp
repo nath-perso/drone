@@ -64,11 +64,11 @@ void radioReceiveData(byte *storageTable)
  */
 void radioDisplayData(byte *storageTable)
 {
-    Serial.print("Received : \t");
+    // Serial.print("Received : \t");
     for (int i = 0; i < RADIO_FRAME_SIZE/2; i++)
     {
         Serial.print(storageTable[i]);
         Serial.print("\t");
     }
-    Serial.println();
+    // Serial.println();
 }

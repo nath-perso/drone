@@ -96,7 +96,7 @@ void loop()
   radioReceiveData(keyValues);
 
   /* Display data received through radio */
-  // radioDisplayData(keyValues);
+  radioDisplayData(keyValues);
 
   /* Get MPU data */
   mpuGetData();
@@ -104,19 +104,19 @@ void loop()
   /* Display flight commands */
   controllerGetCommands(flight_commands);
   // Serial.print("Flight commands :\t");
-  // for(int i = 0; i < NUMBER_OF_COMMANDS; i++){
-  //   Serial.print(flight_commands[i]);
-  //   Serial.print("\t");
-  // }
+  for(int i = 0; i < NUMBER_OF_COMMANDS; i++){
+    Serial.print(flight_commands[i], 4);
+    Serial.print("\t");
+  }
   // Serial.println();
 
   /* Display commands */
   controllerMMA(flight_commands, motors_commands);
   // Serial.print("Commands :\t");
-  // for(int i = 0; i < MOTOR_NUMBER; i++){
-  //   Serial.print(motors_commands[i]);
-  //   Serial.print("\t");
-  // }
+  for(int i = 0; i < MOTOR_NUMBER; i++){
+    Serial.print(motors_commands[i]);
+    Serial.print("\t");
+  }
   // Serial.println();
 
   /* Run ESCs */
@@ -151,6 +151,8 @@ void loop()
   // mainLoopFrequency = 1/((micros() - lastMainLoopTime)*1e-6);
   // Serial.println(mainLoopFrequency);
   // lastMainLoopTime = micros();
+
+  Serial.println();
 }
 
 void blink()

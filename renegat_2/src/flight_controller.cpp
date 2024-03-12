@@ -17,8 +17,9 @@
 #define ROLL_COMMAND_INDEX      2
 #define YAW_COMMAND_INDEX       4
 
-#define MAX_ANGLE   PI/40
-#define MIN_ANGLE   -PI/40
+#define MAX_ANGLE   PI/5
+#define MIN_ANGLE   -PI/5
+#define MAX_ANGULAR_VELOCITY 500
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -88,14 +89,14 @@ public:
 
 float Kp_value = 0.08; // 0.1
 float Ki_value = 0; //0.1;
-float Kd_value = 0.005; // 0.01
+float Kd_value = 0; // 0.005
 
 float integral_limit = 0.1;
 float a0_value = 0.4;
 
 PIDController rollPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
 PIDController pitchPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
-PIDController yawPID(Kp_value, Ki_value, 0, -integral_limit, integral_limit, a0_value);
+PIDController yawPID(1e-4, 0, 0, -integral_limit, integral_limit, 0);
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
@@ -145,7 +146,7 @@ float controllerGetPitchCommand(float raw_setpoint){
  * @return      Yaw command (between -1 and 1)
 */
 float controllerGetYawCommand(float raw_setpoint){
-    float yaw_value = mpuGetYaw();
+    float yaw_value = mpuGetYawSpeed();
     float yaw_error = yaw_value - raw_setpoint;
 
     float yaw_command = yawPID.computeCommand(yaw_error);
@@ -154,33 +155,33 @@ float controllerGetYawCommand(float raw_setpoint){
 }
 
 /**
- * @brief       Convert key values into commands
- * @param       commands : [thrust, roll, pitch, yaw] commands
+ * @brief       Convert key values into setpoints
+ * @param       setpoints : [thrust, roll, pitch, yaw] setpoints
  */
-void controllerGetCommands(float *commands)
+void controllerGetCommands(float *setpoints)
 {
     static float thrust_raw_setpoint = 0;
     float roll_raw_setpoint   = 0;
     float pitch_raw_setpoint  = 0;
     float yaw_raw_setpoint    = 0;
 
-    if(keyValues[THRUST_UP_COMMAND_INDEX] & 0x0001) thrust_raw_setpoint += 0.002;
-    if(keyValues[THRUST_DOWN_COMMAND_INDEX] & 0x0002) thrust_raw_setpoint -= 0.002;
+    if(keyValues[THRUST_UP_COMMAND_INDEX] & 0x0001) thrust_raw_setpoint += 0.004;
+    if(keyValues[THRUST_DOWN_COMMAND_INDEX] & 0x0002) thrust_raw_setpoint -= 0.008;
     thrust_raw_setpoint = constrain(thrust_raw_setpoint, 0, 1);
 
-    roll_raw_setpoint = pow((keyValues[ROLL_COMMAND_INDEX]    - 128)/128.0, 5)*MAX_ANGLE;
-    pitch_raw_setpoint = pow((keyValues[PITCH_COMMAND_INDEX]   - 128)/128.0, 5)*MAX_ANGLE;
-    yaw_raw_setpoint = pow((keyValues[YAW_COMMAND_INDEX]     - 128)/128.0, 5)*MAX_ANGLE;
+    roll_raw_setpoint = pow((keyValues[ROLL_COMMAND_INDEX]    - 128)/128.0, 3)*MAX_ANGLE;
+    pitch_raw_setpoint = pow((keyValues[PITCH_COMMAND_INDEX]   - 128)/128.0, 3)*MAX_ANGLE;
+    yaw_raw_setpoint = pow((keyValues[YAW_COMMAND_INDEX]     - 128)/128.0, 3)*MAX_ANGULAR_VELOCITY;
 
-    commands[0] = thrust_raw_setpoint;
-    commands[1] = controllerGetRollCommand(roll_raw_setpoint);
-    commands[2] = controllerGetPitchCommand(pitch_raw_setpoint);
-    commands[3] = controllerGetYawCommand(yaw_raw_setpoint);
+    setpoints[0] = thrust_raw_setpoint;
+    setpoints[1] = controllerGetRollCommand(roll_raw_setpoint);
+    setpoints[2] = controllerGetPitchCommand(pitch_raw_setpoint);
+    setpoints[3] = controllerGetYawCommand(yaw_raw_setpoint);
 }
 
 /**
- * @brief       Motor Mixing Algorithm : convert flight commands (considered as setpoints) into motor commands
- * @param       setpoints : [thrust, roll, pitch, yaw] flight commands
+ * @brief       Motor Mixing Algorithm : convert flight setpoints (considered as setpoints) into motor commands
+ * @param       setpoints : [thrust, roll, pitch, yaw] flight setpoints
  * @param       commands : motors commands table [Front right, front left, rear right, rear left]
 */
 void controllerMMA(float *setpoints, int *commands) {

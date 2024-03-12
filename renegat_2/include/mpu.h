@@ -34,5 +34,6 @@ void mpuDisplayData();
 float mpuGetRoll();
 float mpuGetPitch();
 float mpuGetYaw();
+float mpuGetYawSpeed();
 
 #endif /* __MPU_H__ */
