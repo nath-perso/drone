@@ -17,9 +17,9 @@
 #define ROLL_COMMAND_INDEX      2
 #define YAW_COMMAND_INDEX       4
 
-#define MAX_ANGLE   PI/5
-#define MIN_ANGLE   -PI/5
-#define MAX_ANGULAR_VELOCITY 500
+#define MAX_ANGLE   PI/10
+#define MIN_ANGLE   -PI/10
+#define MAX_ANGULAR_VELOCITY 250
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -96,7 +96,7 @@ float a0_value = 0.4;
 
 PIDController rollPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
 PIDController pitchPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
-PIDController yawPID(1e-4, 0, 0, -integral_limit, integral_limit, 0);
+PIDController yawPID(5e-5, 0, 0, -integral_limit, integral_limit, 0);
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===

@@ -20,9 +20,9 @@
 #define X_ACCEL_OFFSET  312
 #define Y_ACCEL_OFFSET  -3432
 #define Z_ACCEL_OFFSET  1701
-#define X_GYRO_OFFSET   96 //122
-#define Y_GYRO_OFFSET   -45 //-65
-#define Z_GYRO_OFFSET   32 //122
+#define X_GYRO_OFFSET   98 //122
+#define Y_GYRO_OFFSET   -52 //-65
+#define Z_GYRO_OFFSET   38 //122
 
 /* Scale ranges */
 #define MPU6050_ACCEL_RANGE   MPU6050_ACCEL_FS_16    /* Accelerometer full-scale range : +/- 2, 4, 8 or 16g */
