@@ -13,7 +13,7 @@
 
 #define BLINK_DELAY 200 /* (ms) */
 #define BATTERY_CONVERTER 234/11.6  /* (cnts/V) */
-#define BATTERY_VOLTAGE_WARNING   9*BATTERY_CONVERTER   /* (V) */
+#define BATTERY_VOLTAGE_WARNING   9*BATTERY_CONVERTER   /* (cnts) */
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -41,6 +41,7 @@ int   motors_commands[MOTOR_NUMBER];       /* Motors setpoints table */
 
 void checkBatteryVoltage();
 void blink();
+void radioDisplayComprehensive();
 
 void setup(void)
 {
@@ -96,7 +97,8 @@ void loop()
   radioReceiveData(keyValues);
 
   /* Display data received through radio */
-  radioDisplayData(keyValues);
+  // radioDisplayData(keyValues);
+  radioDisplayComprehensive();
 
   /* Get MPU data */
   mpuGetData();
@@ -123,6 +125,8 @@ void loop()
   escRunAllCommands(motors_commands);
 
   /* Set PID constants */
+  updatePIDConstants();
+  sendPIDConstants();
   // if (Serial.available()) { 
   //   float Kp_des = Serial.parseFloat();
   //   Serial.println("Ki ? "); Serial.flush();
@@ -141,7 +145,7 @@ void loop()
 
 
   /* Print the measures */
-  mpuDisplayData();
+  // mpuDisplayData();
   delay(10);
 
   /* Check battery voltage */
@@ -176,3 +180,4 @@ void checkBatteryVoltage()
   }
   else digitalWrite(LED_PIN, LOW);
 }
+

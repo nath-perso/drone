@@ -142,10 +142,14 @@ void handlePS2Controller(keys *keys)
   keys->digitalKeys.bits.right    = (ps2x.Button(PSB_PAD_RIGHT));
 
   /* Right buttons */
-  if (ps2x.ButtonPressed(PSB_TRIANGLE))	keys->digitalKeys.bits.triangle = toggleButton(0x0400, keys);
-  if (ps2x.ButtonPressed(PSB_CROSS))		keys->digitalKeys.bits.cross    = toggleButton(0x0800, keys);
-  if (ps2x.ButtonPressed(PSB_SQUARE))		keys->digitalKeys.bits.square   = toggleButton(0x1000, keys);
-  if (ps2x.ButtonPressed(PSB_CIRCLE))		keys->digitalKeys.bits.circle   = toggleButton(0x2000, keys);
+  keys->digitalKeys.bits.triangle = (ps2x.Button(PSB_TRIANGLE));
+  keys->digitalKeys.bits.cross    = (ps2x.Button(PSB_CROSS));
+  keys->digitalKeys.bits.square   = (ps2x.Button(PSB_SQUARE));
+  keys->digitalKeys.bits.circle   = (ps2x.Button(PSB_CIRCLE));
+  // if (ps2x.ButtonPressed(PSB_TRIANGLE))	keys->digitalKeys.bits.triangle = toggleButton(0x0400, keys);
+  // if (ps2x.ButtonPressed(PSB_CROSS))		keys->digitalKeys.bits.cross    = toggleButton(0x0800, keys);
+  // if (ps2x.ButtonPressed(PSB_SQUARE))		keys->digitalKeys.bits.square   = toggleButton(0x1000, keys);
+  // if (ps2x.ButtonPressed(PSB_CIRCLE))		keys->digitalKeys.bits.circle   = toggleButton(0x2000, keys);
 
   /* Middle buttons */
   if (ps2x.ButtonPressed(PSB_SELECT))		keys->digitalKeys.bits.select   = toggleButton(0x4000, keys);

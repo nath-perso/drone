@@ -81,6 +81,24 @@ void loop() {
   /* Transmit data through radio */
   radioTransmit(keyValues);
 
+  /* Receive and print PID constants */
+  byte data[8];
+  if (radioReceive(data)) {
+    Serial.print("Pitch - ");
+    Serial.print("Kp : "); Serial.print(data[0]); Serial.print(", ");
+    Serial.print("Ki : "); Serial.print(data[1]); Serial.print(", ");
+    Serial.print("Kd : "); Serial.print(data[2]); Serial.print(", ");
+    Serial.print("\t\tRoll - ");
+    Serial.print("Kp : "); Serial.print(data[3]); Serial.print(", ");
+    Serial.print("Ki : "); Serial.print(data[4]); Serial.print(", ");
+    Serial.print("Kd : "); Serial.print(data[5]); Serial.print(", ");
+    Serial.print("\t\tYaw - ");
+    Serial.print("Kp : "); Serial.print(data[6]); Serial.print(", ");
+    Serial.print("Ki : "); Serial.print(data[7]); Serial.print(", ");
+    Serial.print("Kd : "); Serial.print(data[8]);
+    Serial.println();
+  }
+
   /* Frequency measure */
   // mainLoopFrequency = 1/((micros() - lastMainLoopTime)*1e-6);
   // Serial.println(mainLoopFrequency);

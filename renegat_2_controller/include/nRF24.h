@@ -28,5 +28,6 @@
  * ================================================================ */
 bool radioSetup();
 bool radioTransmit(keys keys);
+bool radioReceive(byte *data);
 
 #endif /* __NRF24_H__ */

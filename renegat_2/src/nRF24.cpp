@@ -59,7 +59,7 @@ void radioReceiveData(byte *storageTable)
 }
 
 /**
- * @brief       Display received data from radio
+ * @brief       Display received raw data from radio
  * @param       storageTable : global table in which data received is stored
  */
 void radioDisplayData(byte *storageTable)
@@ -71,4 +71,15 @@ void radioDisplayData(byte *storageTable)
         Serial.print("\t");
     }
     // Serial.println();
+}
+
+/**
+ * @brief       Send data through radio
+ * @param       data : data to send
+ */
+void radioSendData(byte *data)
+{
+    radio.stopListening();
+    radio.write(data, sizeof(data));
+    radio.startListening();
 }

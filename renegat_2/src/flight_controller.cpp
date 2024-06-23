@@ -4,18 +4,30 @@
 #include "flight_controller.h"
 #include "pins.h"
 #include "Arduino.h"
-#include "nRF24.h"
 #include "ESC.h"
 #include "mpu.h"
+#include "nRF24.h"
+#include "PS_controls.h"
 
 /* ================================================================
  * ===                         DEFINE                           ===
  * ================================================================ */
+
 #define THRUST_UP_COMMAND_INDEX    8
 #define THRUST_DOWN_COMMAND_INDEX  8
 #define PITCH_COMMAND_INDEX     0
 #define ROLL_COMMAND_INDEX      2
 #define YAW_COMMAND_INDEX       4
+#define EMEGENCY_STOP_COMMAND_INDEX  8
+
+#define PITCH_KP_UP_INDEX     8
+#define PITCH_KP_DOWN_INDEX   8
+#define PITCH_KI_UP_INDEX     9
+#define PITCH_KI_DOWN_INDEX   9
+#define ROLL_KP_UP_INDEX     10
+#define ROLL_KP_DOWN_INDEX   10
+#define ROLL_KI_UP_INDEX     10
+#define ROLL_KI_DOWN_INDEX   10
 
 #define MAX_ANGLE   PI/10
 #define MIN_ANGLE   -PI/10
@@ -24,7 +36,6 @@
 /* ================================================================
  * ===                        VARIABLES                         ===
  * ================================================================ */
-extern byte keyValues[RADIO_FRAME_SIZE];
 
 class PIDController {
 private:
@@ -85,6 +96,18 @@ public:
         Serial.flush();
         Serial.readStringUntil('\n');
     }
+
+    void setKp(float Kp_) { Kp = Kp_; }
+    void setKi(float Ki_) { Ki = Ki_; }
+    void setKd(float Kd_) { Kd = Kd_; }
+
+    void incrementKp(float delta) { Kp += delta; Kp = max(Kp, 0);}
+    void incrementKi(float delta) { Ki += delta; Ki = max(Ki, 0);}
+    void incrementKd(float delta) { Kd += delta; Kd = max(Kd, 0);}
+
+    float getKp() const { return Kp; }
+    float getKi() const { return Ki; }
+    float getKd() const { return Kd; }
 };
 
 float Kp_value = 0.08; // 0.1
@@ -103,13 +126,39 @@ PIDController yawPID(5e-5, 0, 0, -integral_limit, integral_limit, 0);
  * ================================================================ */
 
 /**
- * @brief       Set roll PID constants
- * @param       Kp : Proportional constant,
- * @param       Ki : Integral constant
- * @param       Kd : Derivative constant
-*/
-void controllerSetRollPID(float Kp, float Ki, float Kd){
-    rollPID.setConstants(Kp, Ki, Kd);
+ * @brief       Update PID Kp according to input
+ * @param       PID : PID controller to update
+ * @param       Kp_up : Kp up command
+ * @param       Kp_down : Kp down command
+ */
+void updateKp(PIDController &PID, bool Kp_up, bool Kp_down)
+{
+    if(Kp_up) PID.incrementKp(0.001);
+    if(Kp_down) PID.incrementKp(-0.001);
+}
+
+/**
+ * @brief       Update PID Ki according to input
+ * @param       PID : PID controller to update
+ * @param       Ki_up : Ki up command
+ * @param       Ki_down : Ki down command
+ */
+void updateKi(PIDController &PID, bool Ki_up, bool Ki_down)
+{
+    if(Ki_up) PID.incrementKi(0.001);
+    if(Ki_down) PID.incrementKi(-0.001);
+}
+
+/**
+ * @brief       Update PID Kd according to input
+ * @param       PID : PID controller to update
+ * @param       Kd_up : Kd up command
+ * @param       Kd_down : Kd down command
+ */
+void updateKd(PIDController &PID, bool Kd_up, bool Kd_down)
+{
+    if(Kd_up) PID.incrementKd(0.001);
+    if(Kd_down) PID.incrementKd(-0.001);
 }
 
 /**
@@ -165,15 +214,19 @@ void controllerGetCommands(float *setpoints)
     float pitch_raw_setpoint  = 0;
     float yaw_raw_setpoint    = 0;
 
-    if(keyValues[THRUST_UP_COMMAND_INDEX] & 0x0001) thrust_raw_setpoint += 0.004;
-    if(keyValues[THRUST_DOWN_COMMAND_INDEX] & 0x0002) thrust_raw_setpoint -= 0.008;
+    if(L1()) thrust_raw_setpoint += 0.004;
+    if(L2()) thrust_raw_setpoint -= 0.008;
+    // Constrain thrust between 0 and 1
     thrust_raw_setpoint = constrain(thrust_raw_setpoint, 0, 1);
+    // If emergency stop command active, set thrust to 0
+    if(R3() || L3()) thrust_raw_setpoint = 0;
 
-    roll_raw_setpoint = pow((keyValues[ROLL_COMMAND_INDEX]    - 128)/128.0, 3)*MAX_ANGLE;
-    pitch_raw_setpoint = pow((keyValues[PITCH_COMMAND_INDEX]   - 128)/128.0, 3)*MAX_ANGLE;
-    yaw_raw_setpoint = pow((keyValues[YAW_COMMAND_INDEX]     - 128)/128.0, 3)*MAX_ANGULAR_VELOCITY;
+    // Convert roll, pitch and yaw commands into setpoints
+    roll_raw_setpoint = pow(leftStickX(), 3)*MAX_ANGLE;
+    pitch_raw_setpoint = pow(leftStickY(), 3)*MAX_ANGLE;
+    yaw_raw_setpoint = pow(rightStickX(), 3)*MAX_ANGULAR_VELOCITY;
 
-    setpoints[0] = thrust_raw_setpoint;
+    setpoints[0] = thrust_raw_setpoint;     // No control on thrust
     setpoints[1] = controllerGetRollCommand(roll_raw_setpoint);
     setpoints[2] = controllerGetPitchCommand(pitch_raw_setpoint);
     setpoints[3] = controllerGetYawCommand(yaw_raw_setpoint);
@@ -195,4 +248,40 @@ void controllerMMA(float *setpoints, int *commands) {
     commands[1] = constrain(commands[1], 0, (ESC_MAX_CMD - ESC_MIN_CMD)*ESC_CMD_SAT_FACTOR);
     commands[2] = constrain(commands[2], 0, (ESC_MAX_CMD - ESC_MIN_CMD)*ESC_CMD_SAT_FACTOR);
     commands[3] = constrain(commands[3], 0, (ESC_MAX_CMD - ESC_MIN_CMD)*ESC_CMD_SAT_FACTOR);
+}
+
+/**
+ * @brief       Send roll, pitch and yaw PID constants to controller
+ */
+void sendPIDConstants()
+{
+    byte data[9];
+    data[0] = round(rollPID.getKp()*1000);
+    data[1] = round(rollPID.getKi()*1000);
+    data[2] = round(rollPID.getKd()*1000);
+    data[3] = round(pitchPID.getKp()*1000);
+    data[4] = round(pitchPID.getKi()*1000);
+    data[5] = round(pitchPID.getKd()*1000);
+    data[6] = round(yawPID.getKp()*1000);
+    data[7] = round(yawPID.getKi()*1000);
+    data[8] = round(yawPID.getKd()*1000);
+
+    for(int i = 0; i < 9; i++)
+    {
+        Serial.print(data[i]); Serial.print("\t");
+    }
+
+    radioSendData(data);
+}
+
+/**
+ * @brief       Update PID constants according to controller input
+ */
+void updatePIDConstants()
+{
+    updateKp(rollPID, triangle(), cross());
+    updateKi(rollPID, circle(), square());
+
+    updateKp(pitchPID, padUp(), padDown());
+    updateKi(pitchPID, padRight(), padLeft());
 }
