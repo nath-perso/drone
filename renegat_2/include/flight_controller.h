@@ -22,7 +22,7 @@
 void controllerGetCommands(float *commands);
 void controllerMMA(float *setpoints, int *commands);
 
-void sendPIDConstants();
 void updatePIDConstants();
+void displayPIDConstants();
 
 #endif /* __FLIGHT_CONTROLLER_H__ */

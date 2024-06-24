@@ -162,7 +162,7 @@ float leftStickX()
  */
 float leftStickY()
 {
-    return -(keyValues[LEFT_STICK_Y_INDEX] - 128) / 128.0;
+    return (keyValues[LEFT_STICK_Y_INDEX] - 128) / 128.0;
 }
 
 /**
@@ -180,7 +180,7 @@ float rightStickX()
  */
 float rightStickY()
 {
-    return -(keyValues[RIGHT_STICK_Y_INDEX] - 128) / 128.0;
+    return (keyValues[RIGHT_STICK_Y_INDEX] - 128) / 128.0;
 }
 
 /**
@@ -193,20 +193,20 @@ void radioDisplayComprehensive()
     Serial.print(rightStickX()); Serial.print("\t");
     Serial.print(rightStickY()); Serial.print("\t");
 
-    // if(triangle()) Serial.print("T ");
-    // if(cross()) Serial.print("X ");
-    // if(circle()) Serial.print("O ");
-    // if(square()) Serial.print("S ");
-    // if(L1()) Serial.print("L1 ");
-    // if(L2()) Serial.print("L2 ");
-    // if(L3()) Serial.print("L3 ");
-    // if(R1()) Serial.print("R1 ");
-    // if(R2()) Serial.print("R2 ");
-    // if(R3()) Serial.print("R3 ");
-    // if(padUp()) Serial.print("UP ");
-    // if(padDown()) Serial.print("DOWN ");
-    // if(padLeft()) Serial.print("LEFT ");
-    // if(padRight()) Serial.print("RIGHT ");
+    if(triangle()) Serial.print("T ");
+    if(cross()) Serial.print("X ");
+    if(circle()) Serial.print("O ");
+    if(square()) Serial.print("S ");
+    if(L1()) Serial.print("L1 ");
+    if(L2()) Serial.print("L2 ");
+    if(L3()) Serial.print("L3 ");
+    if(R1()) Serial.print("R1 ");
+    if(R2()) Serial.print("R2 ");
+    if(R3()) Serial.print("R3 ");
+    if(padUp()) Serial.print("UP ");
+    if(padDown()) Serial.print("DOWN ");
+    if(padLeft()) Serial.print("LEFT ");
+    if(padRight()) Serial.print("RIGHT ");
 
-    // Serial.print("\t\t");
+    Serial.print("\t\t");
 }

@@ -126,7 +126,7 @@ void loop()
 
   /* Set PID constants */
   updatePIDConstants();
-  sendPIDConstants();
+  displayPIDConstants();
   // if (Serial.available()) { 
   //   float Kp_des = Serial.parseFloat();
   //   Serial.println("Ki ? "); Serial.flush();
@@ -145,7 +145,7 @@ void loop()
 
 
   /* Print the measures */
-  // mpuDisplayData();
+  mpuDisplayData();
   delay(10);
 
   /* Check battery voltage */

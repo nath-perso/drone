@@ -54,17 +54,3 @@ bool radioTransmit(keys keys)
     
     return true;
 }
-
-/**
- * @brief       Receive data through radio
- * @return      True if new data received
- */
-bool radioReceive(byte *data)
-{
-    if (radio.available())
-    {
-        radio.read(data, sizeof(data));
-        return true;
-    }
-    return false;
-}

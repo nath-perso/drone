@@ -72,14 +72,3 @@ void radioDisplayData(byte *storageTable)
     }
     // Serial.println();
 }
-
-/**
- * @brief       Send data through radio
- * @param       data : data to send
- */
-void radioSendData(byte *data)
-{
-    radio.stopListening();
-    radio.write(data, sizeof(data));
-    radio.startListening();
-}

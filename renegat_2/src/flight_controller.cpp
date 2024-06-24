@@ -20,18 +20,9 @@
 #define YAW_COMMAND_INDEX       4
 #define EMEGENCY_STOP_COMMAND_INDEX  8
 
-#define PITCH_KP_UP_INDEX     8
-#define PITCH_KP_DOWN_INDEX   8
-#define PITCH_KI_UP_INDEX     9
-#define PITCH_KI_DOWN_INDEX   9
-#define ROLL_KP_UP_INDEX     10
-#define ROLL_KP_DOWN_INDEX   10
-#define ROLL_KI_UP_INDEX     10
-#define ROLL_KI_DOWN_INDEX   10
-
-#define MAX_ANGLE   PI/10
-#define MIN_ANGLE   -PI/10
-#define MAX_ANGULAR_VELOCITY 250
+#define MAX_ANGLE   PI/200
+#define MIN_ANGLE   -PI/200
+#define MAX_ANGULAR_VELOCITY 400
 
 /* ================================================================
  * ===                        VARIABLES                         ===
@@ -110,16 +101,26 @@ public:
     float getKd() const { return Kd; }
 };
 
-float Kp_value = 0.08; // 0.1
-float Ki_value = 0; //0.1;
-float Kd_value = 0; // 0.005
+float Kp_value = 0.23; // 0.2 - not able to get back up, 0.3 - unstable, 0.23 looks good
+float Ki_value = 0.03; //0.1;
+float Kd_value = 0.02; // Manipulable at 0.04 -> decrease by 20%
+//P0.4, I0, D0.04
+//P0.4, I0, D0.05 a bit better but still unstable
+//P0.4, I0, D0.06 stable ? not at 2nd try
+//P0.4, I0, D0.08 unstable
+//P0.4, I0, D0.04 more unstable
+//P0.3, I0.02, D0.04 correct
+//P0.35, I0.01, D0.06 very correct, but still some static error
+//P0.35, I0.02, D0.06 very very correct, but still some static error
+//P0.35, I0.03, D0.06 let's test it -> P0.23, D0.03 after testing -> unstable, need to reduce gains ? see video
 
-float integral_limit = 0.1;
-float a0_value = 0.4;
+float integral_limit = 0.05;
+float a0_value = 1;
 
 PIDController rollPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
-PIDController pitchPID(Kp_value, Ki_value, Kd_value, -integral_limit, integral_limit, a0_value);
-PIDController yawPID(5e-5, 0, 0, -integral_limit, integral_limit, 0);
+PIDController pitchPID(1.57*Kp_value, 1.57*Ki_value, 1.57*Kd_value, -integral_limit, integral_limit, a0_value);
+// PIDController pitchPID(0, 0, 0, -integral_limit, integral_limit, 0);
+PIDController yawPID(0.00015, 0, 0, -integral_limit, integral_limit, 0);
 
 /* ================================================================
  * ===                        FUNCTIONS                         ===
@@ -133,8 +134,8 @@ PIDController yawPID(5e-5, 0, 0, -integral_limit, integral_limit, 0);
  */
 void updateKp(PIDController &PID, bool Kp_up, bool Kp_down)
 {
-    if(Kp_up) PID.incrementKp(0.001);
-    if(Kp_down) PID.incrementKp(-0.001);
+    if(Kp_up) PID.incrementKp(0.01);
+    if(Kp_down) PID.incrementKp(-0.01);
 }
 
 /**
@@ -224,7 +225,7 @@ void controllerGetCommands(float *setpoints)
     // Convert roll, pitch and yaw commands into setpoints
     roll_raw_setpoint = pow(leftStickX(), 3)*MAX_ANGLE;
     pitch_raw_setpoint = pow(leftStickY(), 3)*MAX_ANGLE;
-    yaw_raw_setpoint = pow(rightStickX(), 3)*MAX_ANGULAR_VELOCITY;
+    yaw_raw_setpoint = pow(-rightStickX(), 3)*MAX_ANGULAR_VELOCITY;
 
     setpoints[0] = thrust_raw_setpoint;     // No control on thrust
     setpoints[1] = controllerGetRollCommand(roll_raw_setpoint);
@@ -251,30 +252,6 @@ void controllerMMA(float *setpoints, int *commands) {
 }
 
 /**
- * @brief       Send roll, pitch and yaw PID constants to controller
- */
-void sendPIDConstants()
-{
-    byte data[9];
-    data[0] = round(rollPID.getKp()*1000);
-    data[1] = round(rollPID.getKi()*1000);
-    data[2] = round(rollPID.getKd()*1000);
-    data[3] = round(pitchPID.getKp()*1000);
-    data[4] = round(pitchPID.getKi()*1000);
-    data[5] = round(pitchPID.getKd()*1000);
-    data[6] = round(yawPID.getKp()*1000);
-    data[7] = round(yawPID.getKi()*1000);
-    data[8] = round(yawPID.getKd()*1000);
-
-    for(int i = 0; i < 9; i++)
-    {
-        Serial.print(data[i]); Serial.print("\t");
-    }
-
-    radioSendData(data);
-}
-
-/**
  * @brief       Update PID constants according to controller input
  */
 void updatePIDConstants()
@@ -284,4 +261,22 @@ void updatePIDConstants()
 
     updateKp(pitchPID, padUp(), padDown());
     updateKi(pitchPID, padRight(), padLeft());
+}
+
+/**
+ * @brief       Display PID constants
+ */
+void displayPIDConstants()
+{
+    Serial.print(rollPID.getKp()); Serial.print("\t");
+    Serial.print(rollPID.getKi()); Serial.print("\t");
+    Serial.print(rollPID.getKd()); Serial.print("\t");
+
+    Serial.print(pitchPID.getKp()); Serial.print("\t");
+    Serial.print(pitchPID.getKi()); Serial.print("\t");
+    Serial.print(pitchPID.getKd()); Serial.print("\t");
+
+    Serial.print(yawPID.getKp()); Serial.print("\t");
+    Serial.print(yawPID.getKi()); Serial.print("\t");
+    Serial.print(yawPID.getKd()); Serial.print("\t");
 }
